@@ -13,38 +13,39 @@
   var isFirefox = navigator.userAgent.indexOf('Firefox') != -1;
 
   // Settings
-  var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
+  var KEY = { BACKSPACE:8, TAB:9, RETURN:13, ESC:27, LEFT:37, UP:38, RIGHT:39, DOWN:40, COMMA:188, SPACE:32, HOME:36, END:35 }; // Keys "enum"
   var defaultSettings = {
-    triggerChar : '@',
-    minChars    : 2,
-    showAvatars : true,
-    elastic : true,
-    classes     : {
-      autoCompleteItemActive : "active"
+    triggerChar:'@',
+    onDataRequest:$.noop,
+    minChars:2,
+    showAvatars:true,
+    elastic:true,
+    classes:{
+      autoCompleteItemActive:"active"
     },
-    templates   : {
-      wrapper                    : _.template('<div class="mentions-input-box"></div>'),
-      autocompleteList           : _.template('<div class="mentions-autocomplete-list"><ul></ul></div>'),
-      autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
-      autocompleteListItemAvatar : _.template('<img  src="<%= avatar %>" />'),
-      autocompleteListItemIcon   : _.template('<div class="icon <%= icon %>"></div>'),
-      mentionsOverlay            : _.template('<div class="mentions"><div></div></div>'),
-      mentionItemSyntax          : _.template('@[<%= value %>](<%= ref_type %>:<%= ref_id %>)'),
-      mentionItemHighlight       : _.template('<strong><span><%= value %></span></strong>')
+    templates:{
+      wrapper:_.template('<div class="mentions-input-box"></div>'),
+      autocompleteList:_.template('<div class="mentions-autocomplete-list"><ul></ul></div>'),
+      autocompleteListItem:_.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
+      autocompleteListItemAvatar:_.template('<img  src="<%= avatar %>" />'),
+      autocompleteListItemIcon:_.template('<div class="icon <%= icon %>"></div>'),
+      mentionsOverlay:_.template('<div class="mentions"><div></div></div>'),
+      mentionItemSyntax:_.template('@[<%= value %>](<%= ref_type %>:<%= ref_id %>)'),
+      mentionItemHighlight:_.template('<strong><span><%= value %></span></strong>')
     }
   };
 
   var utils = {
-    htmlEncode       : function (str) {
+    htmlEncode:function (str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\x22/g, '&quot;').replace(/\x27/g, '&#39;');
     },
-    highlightTerm    : function (value, term) {
-      if ( !term && !term.length ) {
+    highlightTerm:function (value, term) {
+      if (!term && !term.length) {
         return value;
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
-    getCaretPosition : function (domNode) {
+    getCaretPosition:function (domNode) {
 
       if ('selectionStart' in domNode) {
         return domNode.selectionStart;
@@ -53,7 +54,7 @@
       var start = 0, end = 0, normalizedValue, textInputRange, len, endRange;
       var range = document.selection.createRange();
 
-      if ( range && range.parentElement() == domNode ) {
+      if (range && range.parentElement() == domNode) {
         len = domNode.value.length;
 
         normalizedValue = domNode.value.replace(/\r\n/g, "\n");
@@ -61,7 +62,7 @@
         textInputRange.moveToBookmark(range.getBookmark());
         endRange = domNode.createTextRange();
         endRange.collapse(false);
-        if ( textInputRange.compareEndPoints("StartToEnd", endRange) > -1 ) {
+        if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
           start = end = len;
         } else {
           start = -textInputRange.moveStart("character", -len);
@@ -71,13 +72,13 @@
 
       return start;
     },
-    setCaratPosition : function (domNode, caretPos) {
-      if ( domNode.createTextRange ) {
+    setCaratPosition:function (domNode, caretPos) {
+      if (domNode.createTextRange) {
         var range = domNode.createTextRange();
         range.move('character', caretPos);
         range.select();
       } else {
-        if ( domNode.selectionStart ) {
+        if (domNode.selectionStart) {
           domNode.focus();
           domNode.setSelectionRange(caretPos, caretPos);
         } else {
@@ -99,7 +100,7 @@
     function initTextarea() {
       elmInputBox = $(input);
 
-      if ( elmInputBox.attr('data-mentions-input') == 'true' ) {
+      if (elmInputBox.attr('data-mentions-input') == 'true') {
         return;
       }
 
@@ -114,7 +115,7 @@
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
-      if(settings.elastic) {
+      if (settings.elastic) {
         elmInputBox.elastic();
       }
     }
@@ -134,15 +135,15 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, ref_type : 'contact', ref_id : mention.ref_id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value:mention.value, ref_type:'contact', ref_id:mention.ref_id });
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), ref_type : 'contact', ref_id : mention.ref_id });
-        var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
+        var textSyntax = settings.templates.mentionItemSyntax({ value:utils.htmlEncode(mention.value), ref_type:'contact', ref_id:mention.ref_id });
+        var textHighlight = settings.templates.mentionItemHighlight({ value:utils.htmlEncode(mention.value) });
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
@@ -190,9 +191,9 @@
       var updatedMessageText = start + mentionDisplayValue + end;
 
       mentionsCollection.push({
-        ref_id   : elmTarget.attr('data-ref-id'),
-        ref_type : elmTarget.attr('data-ref-type'),
-        value    : elmTarget.attr('data-display')
+        ref_id:elmTarget.attr('data-ref-id'),
+        ref_type:elmTarget.attr('data-ref-type'),
+        value:elmTarget.attr('data-display')
       });
 
       elmInputBox.val(updatedMessageText);
@@ -222,9 +223,9 @@
       hideAutoComplete();
 
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if ( triggerCharIndex > -1 ) {
+      if (triggerCharIndex > -1) {
         var query = inputBuffer.slice(triggerCharIndex + 1).join('');
-        _.defer(doSearch.curry(query));
+        _.defer( _.bind(doSearch, this, query));
       } else {
         startCaretPosition = utils.getCaretPosition(elmInputBox.get(0)) + 2;
       }
@@ -240,12 +241,12 @@
       var value = getInputBoxValue();
       currentCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
 
-      if ( !value.length ) {
+      if (!value.length) {
         startCaretPosition = 0;
         currentCaretPosition = 0;
       }
 
-      if ( e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END ) {
+      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
 
         // Defer execution to ensure carat pos has changed after HOME/END keys
@@ -254,21 +255,21 @@
         return;
       }
 
-      if ( e.keyCode == KEY.BACKSPACE ) {
+      if (e.keyCode == KEY.BACKSPACE) {
         inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
 
-      if ( !elmAutocompleteList.is(':visible') ) {
+      if (!elmAutocompleteList.is(':visible')) {
         return true;
       }
 
-      switch ( e.keyCode ) {
+      switch (e.keyCode) {
         case KEY.UP:
         case KEY.DOWN:
           var elmCurrentAutoCompleteItem = null;
-          if ( e.keyCode == KEY.DOWN ) {
-            if ( elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length ) {
+          if (e.keyCode == KEY.DOWN) {
+            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
               elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next();
             } else {
               elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first();
@@ -277,7 +278,7 @@
             elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev();
           }
 
-          if ( elmCurrentAutoCompleteItem.length ) {
+          if (elmCurrentAutoCompleteItem.length) {
             selectAutoCompleteItem(elmCurrentAutoCompleteItem);
           }
 
@@ -285,7 +286,7 @@
 
         case KEY.RETURN:
         case KEY.TAB:
-          if ( elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length ) {
+          if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
             elmActiveAutoCompleteItem.click();
             return false;
           }
@@ -317,7 +318,7 @@
         return _.include(mentionValues, item.name);
       });
 
-      if ( !results.length ) {
+      if (!results.length) {
         hideAutoComplete();
         return;
       }
@@ -327,19 +328,19 @@
 
       _.each(results, function (item) {
         var elmListItem = $(settings.templates.autocompleteListItem({
-          'id'      : utils.htmlEncode(item.id),
-          'display' : utils.htmlEncode(item.name),
-          'type'    : utils.htmlEncode(item.type),
-          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
+          'id':utils.htmlEncode(item.id),
+          'display':utils.htmlEncode(item.name),
+          'type':utils.htmlEncode(item.type),
+          'content':utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
 
-        if ( settings.showAvatars ) {
+        if (settings.showAvatars) {
           var elmIcon;
 
-          if ( item.avatar ) {
-            elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar : item.avatar }));
+          if (item.avatar) {
+            elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar:item.avatar }));
           } else {
-            elmIcon = $(settings.templates.autocompleteListItemIcon({ icon : item.icon }));
+            elmIcon = $(settings.templates.autocompleteListItemIcon({ icon:item.icon }));
           }
           elmIcon.prependTo(elmListItem);
         }
@@ -351,7 +352,7 @@
     }
 
     function doSearch(query) {
-      if ( query && query.length && query.length >= settings.minChars ) {
+      if (query && query.length && query.length >= settings.minChars) {
         hideAutoComplete();
         requestData('search', query);
       }
@@ -365,7 +366,7 @@
 
     // Public methods
     return {
-      init : function (options) {
+      init:function (options) {
         settings = options;
 
         initTextarea();
@@ -373,8 +374,8 @@
         initMentionsOverlay();
       },
 
-      val : function (callback) {
-        if ( !_.isFunction(callback) ) {
+      val:function (callback) {
+        if (!_.isFunction(callback)) {
           return;
         }
 
@@ -382,14 +383,14 @@
         callback.call(this, value);
       },
 
-      reset : function () {
+      reset:function () {
         elmInputBox.val('');
         mentionsCollection = [];
         updateValues();
       },
 
-      getMentions : function (callback) {
-        if ( !_.isFunction(callback) ) {
+      getMentions:function (callback) {
+        if (!_.isFunction(callback)) {
           return;
         }
 
@@ -400,11 +401,11 @@
 
   $.fn.mentionsInput = function (method, settings) {
 
-    if ( typeof method === 'object' || !method ) {
+    if (typeof method === 'object' || !method) {
       settings = method;
     }
 
-    if ( !settings ) {
+    if (!settings) {
       settings = {};
     }
 
@@ -414,10 +415,10 @@
     return this.each(function () {
       var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(this));
 
-      if ( _.isFunction(instance[method]) ) {
+      if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
 
-      } else if ( typeof method === 'object' || !method ) {
+      } else if (typeof method === 'object' || !method) {
         return instance.init.call(this, settings);
 
       } else {
