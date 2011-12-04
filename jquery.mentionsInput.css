@@ -17,6 +17,10 @@
   position: relative;
   outline: 0;
   resize: none;
+
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
 }
 
 .mentions-input-box .mentions-autocomplete-list {
@@ -41,6 +45,8 @@
 .mentions-input-box .mentions-autocomplete-list li {
   background-color: #fff;
   padding: 0 5px;
+  margin: 0;
+  width: auto;
   border-bottom: 1px solid #eee;
   height: 26px;
   line-height: 26px;
@@ -87,8 +93,6 @@
   top: 1px;
   bottom: 0;
   padding: 9px;
-  line-height: 14px;
-  line-height: 15px\9;
   color: #fff;
   overflow: hidden;
 

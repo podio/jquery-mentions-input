@@ -13,9 +13,20 @@ body {
     padding: 50px 0 50px 50px;
   }
 
-  p, li {
+  div.container > p,
+  div.container > li,
+  div.container > ol {
     margin: 16px 0 16px 0;
     width: 550px;
+  }
+
+  div.examples {
+      width: 550px;
+
+  }
+
+  .examples .mentions-input-box {
+      margin-bottom: 10px;
   }
 
   a, a:visited {
@@ -33,6 +44,10 @@ body {
   h1, h2, h3, h4, h5, h6 {
     margin-top: 40px;
       font-weight:  bold;
+  }
+
+  h1 {
+    font-size: 56px;
   }
 
   h2 {
@@ -54,6 +69,7 @@ body {
   }
     tr, td {
       margin: 0; padding: 0;
+        vertical-align: top;
     }
       td {
         padding: 9px 15px 9px 0;
@@ -81,6 +97,21 @@ body {
     margin: 0px 0 30px;
   }
 
-  h1 {
-    font-size: 56px;
+  .button {
+      display: inline-block;
+      line-height: 24px;
+      margin-bottom: 4px;
+      font-weight: normal;
+      text-shadow: none;
+      padding: 1px 10px 1px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+
+      border-radius: 5px;
+
+      background: #eaeaea;
+      background: -moz-linear-gradient(top, hsl(0, 0%, 96%), #eaeaea);
+      background: -webkit-gradient(linear, left top, left bottom, from(#f6f6f6), to(#eaeaea));
+      border: 1px solid #dcdcdc;
+      color: #525252;
   }

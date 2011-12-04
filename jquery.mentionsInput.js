@@ -4,6 +4,8 @@
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
+ *
+ * License: MIT License - http://www.opensource.org/licenses/mit-license.php
  */
 
 (function ($, _, undefined) {
@@ -353,7 +355,7 @@
 
     function doSearch(query) {
       if (query && query.length && query.length >= settings.minChars) {
-        hideAutoComplete();
+
         requestData('search', query);
       }
     }
