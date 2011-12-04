@@ -97,7 +97,7 @@
     var mentionsCollection = [];
     var inputBuffer = [];
     var currentCaretPosition = 0, startCaretPosition = 0;
-    var startPosOffset = (isIE || isFirefox ? -2 : -1);
+    var startPosOffset = (isIE || isFirefox ? 0 : 1);
 
     function initTextarea() {
       elmInputBox = $(input);
@@ -229,7 +229,8 @@
         var query = inputBuffer.slice(triggerCharIndex + 1).join('');
         _.defer( _.bind(doSearch, this, query));
       } else {
-        startCaretPosition = utils.getCaretPosition(elmInputBox.get(0)) + 2;
+        startCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
+        console.log('startCaretPosition', startCaretPosition);
       }
     }
 

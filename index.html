@@ -4,7 +4,6 @@
   <title>jquery.mentionsInput</title>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
   <link href='https://fonts.googleapis.com/css?family=PT+Sans&subset=latin' rel='stylesheet' type='text/css'>
   <link href='assets/style.css' rel='stylesheet' type='text/css'>
   <link href='jquery.mentionsInput.css' rel='stylesheet' type='text/css'>
@@ -19,7 +18,7 @@
 <h1>jquery.mentionsInput</h1>
 
 <p><a>jquery.mentionsInput</a> is small, but awesome UI component that allows you to "@mention" someone in a text message, just like you are used to on Facebook or Twitter.</p>
-<p>This project started as internal project at <a href="http://podio.com">Podio</a>, and is written by <a href="http://kenneth.io">Kenneth Auchenberg</a>, but has been open sourced to give it a life in the open source community.</p>
+<p>This project started as internal project at <a href="http://podio.com">Podio</a>, and is written by <a href="http://twitter.com/auchenberg">Kenneth Auchenberg</a>, but has been open sourced to give it a life in the open source community.</p>
 
 <h2>Examples</h2>
 
@@ -204,8 +203,13 @@ $('textarea.mention').mentionsInput({
 
 <h2>Dependencies</h2>
 <p>jquery.mentionsInput is written as a jQuery extension, so it naturally requires jQuery. In addition to jQuery, it also depends on <a href="http://documentcloud.github.com/underscore/">underscore.js</a>, which is used to simplify stuff a bit.</p>
+
+<p>The component is also using the new HTML5 "input" event. This means older browsers like IE8, would need a polyfil. which is bundled, that emulates the event.</p>
+
 <p>The component itself is implemented as a small independent function, so it would easily be ported to other frameworks than jQuery. </p>
+
 <p>Furthermore all utility functions has been centralized in the utils-object, which can be replaced with references if you already got functions to htmlEncode, etc. </p>
+
 <p>To make the component grow and shrink to fit it’s content, it also depends on <a href="http://www.unwrongest.com/projects/elastic">jquery.elastic.js</a></p>
 
 <h2>License</h2>
@@ -220,7 +224,8 @@ $('textarea.mention').mentionsInput({
 
   </div>
 
-  <script src='jquery.elastic.js' type='text/javascript'></script>
+  <script src='lib/jquery.events.input.js' type='text/javascript'></script>
+  <script src='lib/jquery.elastic.js' type='text/javascript'></script>
   <script src='jquery.mentionsInput.js' type='text/javascript'></script>
   <script src='assets/examples.js' type='text/javascript'></script>
 

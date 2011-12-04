@@ -2,7 +2,6 @@
 .mentions-input-box {
   position: relative;
   background: #fff;
-  font-size: 14px;
 }
 
 .mentions-input-box textarea {
@@ -40,6 +39,11 @@
   -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.148438);
      -moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.148438);
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.148438);
+}
+
+.mentions-input-box .mentions-autocomplete-list ul {
+    margin: 0;
+    padding: 0;
 }
 
 .mentions-input-box .mentions-autocomplete-list li {
