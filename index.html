@@ -25,7 +25,7 @@
 <p>Basic example (<a href="assets/examples.js">source</a>)</p>
 
 <div class="examples">
-  <textarea class='mention' placeholder='Try to mention me, by typing @Ken'></textarea>
+  <textarea class='mention' placeholder='Try to mention me, by typing @ken'></textarea>
   <a class="button get-syntax-text">Get syntax text</a>
   <a class="button get-mentions">Get mentions collection</a>
 </div>
@@ -58,7 +58,7 @@ $('textarea.mention').mentionsInput({
       { id:6, name:'Pete Lacey', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' }
     ];
 
-    data = _.filter(data, function(item) { return item.name.indexOf(query) > -1 });
+    data = _.filter(data, function(item) { return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1 });
 
     callback.call(this, data);
   }

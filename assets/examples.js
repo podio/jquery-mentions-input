@@ -11,7 +11,7 @@ $(function () {
         { id:6, name:'Pete Lacey', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' }
       ];
 
-      data = _.filter(data, function(item) { return item.name.indexOf(query) > -1 });
+      data = _.filter(data, function(item) { return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1 });
 
       callback.call(this, data);
     }
