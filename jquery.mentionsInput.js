@@ -46,35 +46,6 @@
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
-    getCaretPosition:function (domNode) {
-      var startPos = 0;
-
-      if ('selectionStart' in domNode) {
-        startPos = domNode.selectionStart;
-
-      } else {
-        // IE, let the hacking begin
-        domNode.focus();
-
-        var range = document.selection.createRange();
-        if (range.parentElement() == domNode) {
-          var textInputRange = domNode.createTextRange();
-          textInputRange.moveToBookmark(range.getBookmark());
-          textInputRange.moveToElementText(domNode);
-
-          startPos = textInputRange.text.length;
-
-          var normalizedValue = textInputRange.text.replace(/\r\n/g, "\n");
-          var lineCount = normalizedValue.split("\n").length - 1;
-
-          if(lineCount) {
-            startPos -= lineCount;
-          }
-        }
-      }
-
-      return startPos;
-    },
     setCaratPosition:function (domNode, caretPos) {
       if (domNode.createTextRange) {
         var range = domNode.createTextRange();
@@ -98,6 +69,7 @@
     var mentionsCollection = [];
     var inputBuffer = [];
     var currentCaretPosition = 0, startCaretPosition = 0;
+    var currentDataQuery;
 
     function initTextarea() {
       elmInputBox = $(input);
@@ -159,8 +131,6 @@
 
     function resetBufferAndUpdateCaretStartPosition() {
       inputBuffer = [];
-      startCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
-
     }
 
     function updateMentionsCollection() {
@@ -180,17 +150,18 @@
       // Clear input buffer
       inputBuffer = [];
 
+
       var elmTarget = $(this);
       var currentMessage = getInputBoxValue();
 
       var mentionDisplayValue = elmTarget.attr('data-display');
 
-      // Display value
-      if(isWebkit && startCaretPosition > 0) {
-        // Webkit seems to return the wrong position, the position before the cursor, not after.
-        startCaretPosition = startCaretPosition + 1;
-      }
+      // Using a regex to figure out positions
+      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+      regex.exec(currentMessage);
 
+      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
+      var currentCaretPosition = regex.lastIndex;
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
@@ -218,6 +189,8 @@
 
       hideAutoComplete();
 
+      currentDataQuery = '';
+
       return false;
     }
 
@@ -232,10 +205,8 @@
 
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
       if (triggerCharIndex > -1) {
-        var query = inputBuffer.slice(triggerCharIndex + 1).join('');
-        _.defer( _.bind(doSearch, this, query));
-      } else {
-        startCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
+        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+        _.defer( _.bind(doSearch, this, currentDataQuery));
       }
     }
 
@@ -245,9 +216,6 @@
     }
 
     function onInputBoxKeyDown(e) {
-
-      currentCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
-
 
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
