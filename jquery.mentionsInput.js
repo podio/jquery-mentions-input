@@ -11,8 +11,7 @@
 (function ($, _, undefined) {
 
   // Browser detections
-  var isIE = (!+"\v1"); //hack based on this: http://webreflection.blogspot.com/2009/01/32-bytes-to-know-if-your-browser-is-ie.html
-  var isFirefox = navigator.userAgent.indexOf('Firefox') != -1;
+  var isWebkit = navigator.userAgent.indexOf('WebKit') != -1;
 
   // Settings
   var KEY = { BACKSPACE:8, TAB:9, RETURN:13, ESC:27, LEFT:37, UP:38, RIGHT:39, DOWN:40, COMMA:188, SPACE:32, HOME:36, END:35 }; // Keys "enum"
@@ -48,31 +47,33 @@
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
     getCaretPosition:function (domNode) {
+      var startPos = 0;
 
       if ('selectionStart' in domNode) {
-        return domNode.selectionStart;
-      }
+        startPos = domNode.selectionStart;
 
-      var start = 0, end = 0, normalizedValue, textInputRange, len, endRange;
-      var range = document.selection.createRange();
+      } else {
+        // IE, let the hacking begin
+        domNode.focus();
 
-      if (range && range.parentElement() == domNode) {
-        len = domNode.value.length;
+        var range = document.selection.createRange();
+        if (range.parentElement() == domNode) {
+          var textInputRange = domNode.createTextRange();
+          textInputRange.moveToBookmark(range.getBookmark());
+          textInputRange.moveToElementText(domNode);
 
-        normalizedValue = domNode.value.replace(/\r\n/g, "\n");
-        textInputRange = domNode.createTextRange();
-        textInputRange.moveToBookmark(range.getBookmark());
-        endRange = domNode.createTextRange();
-        endRange.collapse(false);
-        if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
-          start = end = len;
-        } else {
-          start = -textInputRange.moveStart("character", -len);
-          start += normalizedValue.slice(0, start).split("\n").length - 1;
+          startPos = textInputRange.text.length;
+
+          var normalizedValue = textInputRange.text.replace(/\r\n/g, "\n");
+          var lineCount = normalizedValue.split("\n").length - 1;
+
+          if(lineCount) {
+            startPos -= lineCount;
+          }
         }
       }
 
-      return start;
+      return startPos;
     },
     setCaratPosition:function (domNode, caretPos) {
       if (domNode.createTextRange) {
@@ -97,7 +98,6 @@
     var mentionsCollection = [];
     var inputBuffer = [];
     var currentCaretPosition = 0, startCaretPosition = 0;
-    var startPosOffset = (isIE || isFirefox ? 0 : 1);
 
     function initTextarea() {
       elmInputBox = $(input);
@@ -186,7 +186,13 @@
       var mentionDisplayValue = elmTarget.attr('data-display');
 
       // Display value
-      var start = currentMessage.substr(0, startPosOffset + startCaretPosition);
+      if(isWebkit && startCaretPosition > 0) {
+        // Webkit seems to return the wrong position, the position before the cursor, not after.
+        startCaretPosition = startCaretPosition + 1;
+      }
+
+
+      var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
       var startEndIndex = (start + mentionDisplayValue).length;
 
@@ -230,7 +236,6 @@
         _.defer( _.bind(doSearch, this, query));
       } else {
         startCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
-        console.log('startCaretPosition', startCaretPosition);
       }
     }
 
@@ -241,13 +246,8 @@
 
     function onInputBoxKeyDown(e) {
 
-      var value = getInputBoxValue();
       currentCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
 
-      if (!value.length) {
-        startCaretPosition = 0;
-        currentCaretPosition = 0;
-      }
 
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
