@@ -10,9 +10,6 @@
 
 (function ($, _, undefined) {
 
-  // Browser detections
-  var isWebkit = navigator.userAgent.indexOf('WebKit') != -1;
-
   // Settings
   var KEY = { BACKSPACE:8, TAB:9, RETURN:13, ESC:27, LEFT:37, UP:38, RIGHT:39, DOWN:40, COMMA:188, SPACE:32, HOME:36, END:35 }; // Keys "enum"
   var defaultSettings = {
@@ -68,7 +65,6 @@
     var elmActiveAutoCompleteItem;
     var mentionsCollection = [];
     var inputBuffer = [];
-    var currentCaretPosition = 0, startCaretPosition = 0;
     var currentDataQuery;
 
     function initTextarea() {
@@ -129,7 +125,7 @@
       elmMentionsOverlay.find('div').html(mentionText);
     }
 
-    function resetBufferAndUpdateCaretStartPosition() {
+    function resetBuffer() {
       inputBuffer = [];
     }
 
@@ -147,9 +143,6 @@
     }
 
     function onAutoCompleteItemClick(e) {
-      // Clear input buffer
-      inputBuffer = [];
-
 
       var elmTarget = $(this);
       var currentMessage = getInputBoxValue();
@@ -178,9 +171,7 @@
       elmInputBox.val(updatedMessageText);
 
       // Set correct focus and selection
-      var domInputBox = elmInputBox[0];
-
-      utils.setCaratPosition(domInputBox, startEndIndex);
+      utils.setCaratPosition(elmInputBox[0], startEndIndex);
 
       elmInputBox.focus();
 
@@ -189,13 +180,15 @@
 
       hideAutoComplete();
 
+      // Cleaning
+      resetBuffer();
       currentDataQuery = '';
 
       return false;
     }
 
     function onInputBoxClick(e) {
-      resetBufferAndUpdateCaretStartPosition();
+      resetBuffer();
     }
 
     function onInputBoxInput(e) {
@@ -221,7 +214,7 @@
         // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
 
         // Defer execution to ensure carat pos has changed after HOME/END keys
-        _.defer(resetBufferAndUpdateCaretStartPosition);
+        _.defer(resetBuffer);
 
         return;
       }
