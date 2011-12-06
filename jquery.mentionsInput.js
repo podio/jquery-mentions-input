@@ -1,35 +1,34 @@
 /*
  * Mentions Input
- * Version 1.1
+ * Version 1.0
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
+ *
+ * License: MIT License - http://www.opensource.org/licenses/mit-license.php
  */
 
 (function ($, _, undefined) {
 
-  // Browser detections
-  var isIE = (!+"\v1"); //hack based on this: http://webreflection.blogspot.com/2009/01/32-bytes-to-know-if-your-browser-is-ie.html
-  var isFirefox = navigator.userAgent.indexOf('Firefox') != -1;
-
   // Settings
   var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
-    triggerChar : '@',
-    minChars    : 2,
-    showAvatars : true,
-    elastic : true,
-    classes     : {
+    triggerChar   : '@',
+    onDataRequest : $.noop,
+    minChars      : 2,
+    showAvatars   : true,
+    elastic       : true,
+    classes       : {
       autoCompleteItemActive : "active"
     },
-    templates   : {
+    templates     : {
       wrapper                    : _.template('<div class="mentions-input-box"></div>'),
-      autocompleteList           : _.template('<div class="mentions-autocomplete-list"><ul></ul></div>'),
+      autocompleteList           : _.template('<div class="mentions-autocomplete-list"></div>'),
       autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
       autocompleteListItemAvatar : _.template('<img  src="<%= avatar %>" />'),
       autocompleteListItemIcon   : _.template('<div class="icon <%= icon %>"></div>'),
       mentionsOverlay            : _.template('<div class="mentions"><div></div></div>'),
-      mentionItemSyntax          : _.template('@[<%= value %>](<%= ref_type %>:<%= ref_id %>)'),
+      mentionItemSyntax          : _.template('@[<%= value %>](<%= type %>:<%= id %>)'),
       mentionItemHighlight       : _.template('<strong><span><%= value %></span></strong>')
     }
   };
@@ -39,45 +38,18 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\x22/g, '&quot;').replace(/\x27/g, '&#39;');
     },
     highlightTerm    : function (value, term) {
-      if ( !term && !term.length ) {
+      if (!term && !term.length) {
         return value;
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
-    getCaretPosition : function (domNode) {
-
-      if ('selectionStart' in domNode) {
-        return domNode.selectionStart;
-      }
-
-      var start = 0, end = 0, normalizedValue, textInputRange, len, endRange;
-      var range = document.selection.createRange();
-
-      if ( range && range.parentElement() == domNode ) {
-        len = domNode.value.length;
-
-        normalizedValue = domNode.value.replace(/\r\n/g, "\n");
-        textInputRange = domNode.createTextRange();
-        textInputRange.moveToBookmark(range.getBookmark());
-        endRange = domNode.createTextRange();
-        endRange.collapse(false);
-        if ( textInputRange.compareEndPoints("StartToEnd", endRange) > -1 ) {
-          start = end = len;
-        } else {
-          start = -textInputRange.moveStart("character", -len);
-          start += normalizedValue.slice(0, start).split("\n").length - 1;
-        }
-      }
-
-      return start;
-    },
     setCaratPosition : function (domNode, caretPos) {
-      if ( domNode.createTextRange ) {
+      if (domNode.createTextRange) {
         var range = domNode.createTextRange();
         range.move('character', caretPos);
         range.select();
       } else {
-        if ( domNode.selectionStart ) {
+        if (domNode.selectionStart) {
           domNode.focus();
           domNode.setSelectionRange(caretPos, caretPos);
         } else {
@@ -89,17 +61,15 @@
 
   var MentionsInput = function (input) {
     var settings;
-    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay;
-    var elmActiveAutoCompleteItem;
+    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
     var inputBuffer = [];
-    var currentCaretPosition = 0, startCaretPosition = 0;
-    var startPosOffset = (isIE || isFirefox ? -2 : -1);
+    var currentDataQuery;
 
     function initTextarea() {
       elmInputBox = $(input);
 
-      if ( elmInputBox.attr('data-mentions-input') == 'true' ) {
+      if (elmInputBox.attr('data-mentions-input') == 'true') {
         return;
       }
 
@@ -114,7 +84,7 @@
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
-      if(settings.elastic) {
+      if (settings.elastic) {
         elmInputBox.elastic();
       }
     }
@@ -134,14 +104,14 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, ref_type : 'contact', ref_id : mention.ref_id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : 'contact', id : mention.id });
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), ref_type : 'contact', ref_id : mention.ref_id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : 'contact', id : mention.id });
         var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
@@ -154,10 +124,8 @@
       elmMentionsOverlay.find('div').html(mentionText);
     }
 
-    function resetBufferAndUpdateCaretStartPosition() {
+    function resetBuffer() {
       inputBuffer = [];
-      startCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
-
     }
 
     function updateMentionsCollection() {
@@ -169,38 +137,32 @@
       mentionsCollection = _.compact(mentionsCollection);
     }
 
-    function getInputBoxValue() {
-      return $.trim(elmInputBox.val());
-    }
-
-    function onAutoCompleteItemClick(e) {
-      // Clear input buffer
-      inputBuffer = [];
-
-      var elmTarget = $(this);
+    function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
 
-      var mentionDisplayValue = elmTarget.attr('data-display');
+      // Using a regex to figure out positions
+      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+      regex.exec(currentMessage);
 
-      // Display value
-      var start = currentMessage.substr(0, startPosOffset + startCaretPosition);
+      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
+      var currentCaretPosition = regex.lastIndex;
+
+      var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + mentionDisplayValue).length;
+      var startEndIndex = (start + value).length;
 
-      var updatedMessageText = start + mentionDisplayValue + end;
+      var updatedMessageText = start + value + end;
 
       mentionsCollection.push({
-        ref_id   : elmTarget.attr('data-ref-id'),
-        ref_type : elmTarget.attr('data-ref-type'),
-        value    : elmTarget.attr('data-display')
+        id    : id,
+        type  : type,
+        value : value
       });
 
       elmInputBox.val(updatedMessageText);
 
       // Set correct focus and selection
-      var domInputBox = elmInputBox[0];
-
-      utils.setCaratPosition(domInputBox, startEndIndex);
+      utils.setCaratPosition(elmInputBox[0], startEndIndex);
 
       elmInputBox.focus();
 
@@ -209,11 +171,25 @@
 
       hideAutoComplete();
 
+      // Cleaning
+      resetBuffer();
+      currentDataQuery = '';
+    }
+
+    function getInputBoxValue() {
+      return $.trim(elmInputBox.val());
+    }
+
+    function onAutoCompleteItemClick(e) {
+      var elmTarget = $(this);
+
+      addMention(elmTarget.attr('data-display'), elmTarget.attr('data-ref-id'), elmTarget.attr('data-ref-type'));
+
       return false;
     }
 
     function onInputBoxClick(e) {
-      resetBufferAndUpdateCaretStartPosition();
+      resetBuffer();
     }
 
     function onInputBoxInput(e) {
@@ -222,11 +198,10 @@
       hideAutoComplete();
 
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if ( triggerCharIndex > -1 ) {
-        var query = inputBuffer.slice(triggerCharIndex + 1).join('');
-        _.defer(doSearch.curry(query));
-      } else {
-        startCaretPosition = utils.getCaretPosition(elmInputBox.get(0)) + 2;
+      if (triggerCharIndex > -1) {
+        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+
+        _.defer(_.bind(doSearch, this, currentDataQuery));
       }
     }
 
@@ -237,38 +212,28 @@
 
     function onInputBoxKeyDown(e) {
 
-      var value = getInputBoxValue();
-      currentCaretPosition = utils.getCaretPosition(elmInputBox.get(0));
-
-      if ( !value.length ) {
-        startCaretPosition = 0;
-        currentCaretPosition = 0;
-      }
-
-      if ( e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END ) {
-        // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
-
+      // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
+      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
-        _.defer(resetBufferAndUpdateCaretStartPosition);
-
+        _.defer(resetBuffer);
         return;
       }
 
-      if ( e.keyCode == KEY.BACKSPACE ) {
+      if (e.keyCode == KEY.BACKSPACE) {
         inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
 
-      if ( !elmAutocompleteList.is(':visible') ) {
+      if (!elmAutocompleteList.is(':visible')) {
         return true;
       }
 
-      switch ( e.keyCode ) {
+      switch (e.keyCode) {
         case KEY.UP:
         case KEY.DOWN:
           var elmCurrentAutoCompleteItem = null;
-          if ( e.keyCode == KEY.DOWN ) {
-            if ( elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length ) {
+          if (e.keyCode == KEY.DOWN) {
+            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
               elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next();
             } else {
               elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first();
@@ -277,7 +242,7 @@
             elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev();
           }
 
-          if ( elmCurrentAutoCompleteItem.length ) {
+          if (elmCurrentAutoCompleteItem.length) {
             selectAutoCompleteItem(elmCurrentAutoCompleteItem);
           }
 
@@ -285,7 +250,7 @@
 
         case KEY.RETURN:
         case KEY.TAB:
-          if ( elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length ) {
+          if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
             elmActiveAutoCompleteItem.click();
             return false;
           }
@@ -317,7 +282,7 @@
         return _.include(mentionValues, item.name);
       });
 
-      if ( !results.length ) {
+      if (!results.length) {
         hideAutoComplete();
         return;
       }
@@ -333,10 +298,10 @@
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
 
-        if ( settings.showAvatars ) {
+        if (settings.showAvatars) {
           var elmIcon;
 
-          if ( item.avatar ) {
+          if (item.avatar) {
             elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar : item.avatar }));
           } else {
             elmIcon = $(settings.templates.autocompleteListItemIcon({ icon : item.icon }));
@@ -351,16 +316,11 @@
     }
 
     function doSearch(query) {
-      if ( query && query.length && query.length >= settings.minChars ) {
-        hideAutoComplete();
-        requestData('search', query);
+      if (query && query.length && query.length >= settings.minChars) {
+        settings.onDataRequest.call(this, 'search', query, function (responseData) {
+          populateDropdown(query, responseData);
+        });
       }
-    }
-
-    function requestData(mode, query) {
-      settings.onDataRequest(mode, query, function (responseData) {
-        populateDropdown(query, responseData);
-      });
     }
 
     // Public methods
@@ -374,7 +334,7 @@
       },
 
       val : function (callback) {
-        if ( !_.isFunction(callback) ) {
+        if (!_.isFunction(callback)) {
           return;
         }
 
@@ -389,7 +349,7 @@
       },
 
       getMentions : function (callback) {
-        if ( !_.isFunction(callback) ) {
+        if (!_.isFunction(callback)) {
           return;
         }
 
@@ -400,11 +360,11 @@
 
   $.fn.mentionsInput = function (method, settings) {
 
-    if ( typeof method === 'object' || !method ) {
+    if (typeof method === 'object' || !method) {
       settings = method;
     }
 
-    if ( !settings ) {
+    if (!settings) {
       settings = {};
     }
 
@@ -414,10 +374,10 @@
     return this.each(function () {
       var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(this));
 
-      if ( _.isFunction(instance[method]) ) {
+      if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
 
-      } else if ( typeof method === 'object' || !method ) {
+      } else if (typeof method === 'object' || !method) {
         return instance.init.call(this, settings);
 
       } else {
