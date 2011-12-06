@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.1
+ * Version 1.0
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
@@ -11,39 +11,39 @@
 (function ($, _, undefined) {
 
   // Settings
-  var KEY = { BACKSPACE:8, TAB:9, RETURN:13, ESC:27, LEFT:37, UP:38, RIGHT:39, DOWN:40, COMMA:188, SPACE:32, HOME:36, END:35 }; // Keys "enum"
+  var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
-    triggerChar:'@',
-    onDataRequest:$.noop,
-    minChars:2,
-    showAvatars:true,
-    elastic:true,
-    classes:{
-      autoCompleteItemActive:"active"
+    triggerChar   : '@',
+    onDataRequest : $.noop,
+    minChars      : 2,
+    showAvatars   : true,
+    elastic       : true,
+    classes       : {
+      autoCompleteItemActive : "active"
     },
-    templates:{
-      wrapper:_.template('<div class="mentions-input-box"></div>'),
-      autocompleteList:_.template('<div class="mentions-autocomplete-list"><ul></ul></div>'),
-      autocompleteListItem:_.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
-      autocompleteListItemAvatar:_.template('<img  src="<%= avatar %>" />'),
-      autocompleteListItemIcon:_.template('<div class="icon <%= icon %>"></div>'),
-      mentionsOverlay:_.template('<div class="mentions"><div></div></div>'),
-      mentionItemSyntax:_.template('@[<%= value %>](<%= ref_type %>:<%= ref_id %>)'),
-      mentionItemHighlight:_.template('<strong><span><%= value %></span></strong>')
+    templates     : {
+      wrapper                    : _.template('<div class="mentions-input-box"></div>'),
+      autocompleteList           : _.template('<div class="mentions-autocomplete-list"></div>'),
+      autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
+      autocompleteListItemAvatar : _.template('<img  src="<%= avatar %>" />'),
+      autocompleteListItemIcon   : _.template('<div class="icon <%= icon %>"></div>'),
+      mentionsOverlay            : _.template('<div class="mentions"><div></div></div>'),
+      mentionItemSyntax          : _.template('@[<%= value %>](<%= type %>:<%= id %>)'),
+      mentionItemHighlight       : _.template('<strong><span><%= value %></span></strong>')
     }
   };
 
   var utils = {
-    htmlEncode:function (str) {
+    htmlEncode       : function (str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\x22/g, '&quot;').replace(/\x27/g, '&#39;');
     },
-    highlightTerm:function (value, term) {
+    highlightTerm    : function (value, term) {
       if (!term && !term.length) {
         return value;
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
-    setCaratPosition:function (domNode, caretPos) {
+    setCaratPosition : function (domNode, caretPos) {
       if (domNode.createTextRange) {
         var range = domNode.createTextRange();
         range.move('character', caretPos);
@@ -61,8 +61,7 @@
 
   var MentionsInput = function (input) {
     var settings;
-    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay;
-    var elmActiveAutoCompleteItem;
+    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
     var inputBuffer = [];
     var currentDataQuery;
@@ -105,15 +104,15 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value:mention.value, ref_type:'contact', ref_id:mention.ref_id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : 'contact', id : mention.id });
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value:utils.htmlEncode(mention.value), ref_type:'contact', ref_id:mention.ref_id });
-        var textHighlight = settings.templates.mentionItemHighlight({ value:utils.htmlEncode(mention.value) });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : 'contact', id : mention.id });
+        var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
@@ -138,16 +137,8 @@
       mentionsCollection = _.compact(mentionsCollection);
     }
 
-    function getInputBoxValue() {
-      return $.trim(elmInputBox.val());
-    }
-
-    function onAutoCompleteItemClick(e) {
-
-      var elmTarget = $(this);
+    function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
-
-      var mentionDisplayValue = elmTarget.attr('data-display');
 
       // Using a regex to figure out positions
       var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
@@ -158,14 +149,14 @@
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + mentionDisplayValue).length;
+      var startEndIndex = (start + value).length;
 
-      var updatedMessageText = start + mentionDisplayValue + end;
+      var updatedMessageText = start + value + end;
 
       mentionsCollection.push({
-        ref_id:elmTarget.attr('data-ref-id'),
-        ref_type:elmTarget.attr('data-ref-type'),
-        value:elmTarget.attr('data-display')
+        id    : id,
+        type  : type,
+        value : value
       });
 
       elmInputBox.val(updatedMessageText);
@@ -183,6 +174,16 @@
       // Cleaning
       resetBuffer();
       currentDataQuery = '';
+    }
+
+    function getInputBoxValue() {
+      return $.trim(elmInputBox.val());
+    }
+
+    function onAutoCompleteItemClick(e) {
+      var elmTarget = $(this);
+
+      addMention(elmTarget.attr('data-display'), elmTarget.attr('data-ref-id'), elmTarget.attr('data-ref-type'));
 
       return false;
     }
@@ -199,7 +200,8 @@
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
       if (triggerCharIndex > -1) {
         currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
-        _.defer( _.bind(doSearch, this, currentDataQuery));
+
+        _.defer(_.bind(doSearch, this, currentDataQuery));
       }
     }
 
@@ -210,12 +212,10 @@
 
     function onInputBoxKeyDown(e) {
 
+      // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
-        // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
-
         // Defer execution to ensure carat pos has changed after HOME/END keys
         _.defer(resetBuffer);
-
         return;
       }
 
@@ -292,19 +292,19 @@
 
       _.each(results, function (item) {
         var elmListItem = $(settings.templates.autocompleteListItem({
-          'id':utils.htmlEncode(item.id),
-          'display':utils.htmlEncode(item.name),
-          'type':utils.htmlEncode(item.type),
-          'content':utils.highlightTerm(utils.htmlEncode((item.name)), query)
+          'id'      : utils.htmlEncode(item.id),
+          'display' : utils.htmlEncode(item.name),
+          'type'    : utils.htmlEncode(item.type),
+          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
 
         if (settings.showAvatars) {
           var elmIcon;
 
           if (item.avatar) {
-            elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar:item.avatar }));
+            elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar : item.avatar }));
           } else {
-            elmIcon = $(settings.templates.autocompleteListItemIcon({ icon:item.icon }));
+            elmIcon = $(settings.templates.autocompleteListItemIcon({ icon : item.icon }));
           }
           elmIcon.prependTo(elmListItem);
         }
@@ -317,20 +317,15 @@
 
     function doSearch(query) {
       if (query && query.length && query.length >= settings.minChars) {
-
-        requestData('search', query);
+        settings.onDataRequest.call(this, 'search', query, function (responseData) {
+          populateDropdown(query, responseData);
+        });
       }
-    }
-
-    function requestData(mode, query) {
-      settings.onDataRequest(mode, query, function (responseData) {
-        populateDropdown(query, responseData);
-      });
     }
 
     // Public methods
     return {
-      init:function (options) {
+      init : function (options) {
         settings = options;
 
         initTextarea();
@@ -338,7 +333,7 @@
         initMentionsOverlay();
       },
 
-      val:function (callback) {
+      val : function (callback) {
         if (!_.isFunction(callback)) {
           return;
         }
@@ -347,13 +342,13 @@
         callback.call(this, value);
       },
 
-      reset:function () {
+      reset : function () {
         elmInputBox.val('');
         mentionsCollection = [];
         updateValues();
       },
 
-      getMentions:function (callback) {
+      getMentions : function (callback) {
         if (!_.isFunction(callback)) {
           return;
         }
