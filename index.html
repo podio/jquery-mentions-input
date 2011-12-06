@@ -17,8 +17,13 @@
 
 <h1>jquery.mentionsInput</h1>
 
-<p><a>jquery.mentionsInput</a> is small, but awesome UI component that allows you to "@mention" someone in a text message - just like you are used to on Twitter or Facebook.</p>
-<p>This project started as internal project at <a href="http://podio.com">Podio</a>, and is written by <a href="http://twitter.com/auchenberg">Kenneth Auchenberg</a>, but has been open sourced to give it a life in the open source community.</p>
+ <p>
+  <a>jquery.mentionsInput</a> is a small, but awesome UI component that allows you to "@mention" someone in a text message, just like you are used to on Facebook or Twitter.
+</p>
+
+<p>
+This project started as an internal project at <a href="http://podio.com">Podio</a>, but has then been open sourced to give it a life in the community. It is written by <a href="http://kenneth.io">Kenneth Auchenberg</a>
+</p>
 
 <h2>Examples</h2>
 
@@ -26,12 +31,12 @@
 
 <div class="examples">
   <textarea class='mention' placeholder='Try to mention me, by typing @ken'></textarea>
-  <a class="button get-syntax-text">Get syntax text</a>
+  <a class="button get-syntax-text">Get marked-up value</a>
   <a class="button get-mentions">Get mentions collection</a>
 </div>
 
 <h2>Download and source</h2>
-<p>You can grab the latest source from the repository on GitHub right here <a href="https://github.com/podio/jquery-mentions-input">https://github.com/podio/jquery-mentions-input</a>.</p>
+<p>You can grab the latest source from the repository on GitHub by clicking here: <a href="https://github.com/podio/jquery-mentions-input">https://github.com/podio/jquery-mentions-input</a>.</p>
 
 <h2>Getting started</h2>
 
@@ -73,7 +78,7 @@ $('textarea.mention').mentionsInput({
 </ol>
 
 <h2>Configuration</h2>
-<p>jquery.mentionsInput does have number of extra configuration options that you may change to customize the way jquery.mentionsInput behaves.</p>
+<p>jquery.mentionsInput does have a number of extra configuration options which you may change to customise the way it behaves.</p>
 
 <p>The meaning of the options and their default values are listed below. </p>
 
@@ -82,16 +87,15 @@ $('textarea.mention').mentionsInput({
     <td><b>onDataRequest</b></td>
     <td><tt>function(mode, query, callback)</tt></td>
     <td class="definition">
-      This function is the callback function which is used to perform a search for a mention. When a search is started
-      this function is called with arguments 'search', the query (whats typed), and the callback which is pointing to
-      an internal populate method, which expects the search data as first argument.
+      This function is a callback function which is used to provide data for the autocomplete. When a search starts
+      this function is called with following arguments: 'search', the query (what's been typed), and a callback function which needs to be called inside onDataRequest with a data collection to be searched on as a first argument.
     </td>
   </tr>
   <tr>
     <td><b>triggerChar</b></td>
     <td><tt>@</tt></td>
     <td class="definition">
-      Trigger character which is used to trigger the mention search, when the character has been typed into the
+      Trigger character which triggers the mentions search, when the character has been typed into the
       mentions input field.
     </td>
   </tr>
@@ -99,35 +103,35 @@ $('textarea.mention').mentionsInput({
     <td><b>minChars</b></td>
     <td><tt>2</tt></td>
     <td class="definition">
-      The amount of characters after the trigger character before a search is performed.
+      The minimum amount of characters after the trigger character necessary to perform a search.
     </td>
   </tr>
   <tr>
     <td><b>showAvatars</b></td>
     <td><tt>true&nbsp;|&nbsp;false</tt></td>
     <td class="definition">
-      Option to toggle if items within autocomplete-dropdown should be rendered with an icon/avatar.
+      Toggles whether or not items within the autocomplete-dropdown will be rendered with an icon/avatar.
     </td>
   </tr>
   <tr>
     <td><b>elastic</b></td>
     <td><tt>true&nbsp;|&nbsp;false</tt></td>
     <td class="definition">
-      Option to toggle if the mentions component should auto-grow when creating new lines (elastic behaviour).
+      Toggles whether or not the mentions component will auto-grow when new lines are created (elastic behaviour).
     </td>
   </tr>
   <tr>
     <td><b>classes</b></td>
     <td><tt>object</tt></td>
     <td class="definition">
-      Object which contains key/value pairs of classes used in the layout
+      Object which contains classes used in the layout as key/value pairs.
     </td>
   </tr>
   <tr>
     <td><b>templates</b></td>
     <td><tt>object</tt></td>
     <td class="definition">
-      Object which contains key/value pairs of templates used to render the layout.
+      Object which contains templates used to render the layout as key/value pairs.
     </td>
   </tr>
 </table>
@@ -141,36 +145,35 @@ $('textarea.mention').mentionsInput({
     <td><b>init</b></td>
     <td></td>
     <td class="definition">
-      Initialising the MentionsInput component on a specific element.
+      Initialises the mentionsInput component on a specific element.
     </td>
   </tr>
   <tr>
     <td><b>reset</b></td>
     <td></td>
     <td class="definition">
-      Resets the component, clears any mentions.
+      Resets the component, clears all mentions.
     </td>
   </tr>
   <tr>
     <td><b>val(callback)</b></td>
     <td></td>
     <td class="definition">
-      Async methods which accepts an callback, and returns the value of the syntaxed version of the input field , as
-      the first argument to the callback function. <br/><br/> This is the value you want to send to your server.
+      An async method which accepts a callback function and returns a value of the input field (including markup) as a first parameter of this function. <br/><br/> This is the value you want to send to your server.
     </td>
   </tr>
   <tr>
     <td><b>getMentions(callback)</b></td>
     <td></td>
     <td class="definition">
-      Async methods which accepts an callback, and returns a collection of mentions as objects.
+      An async method which accepts a callback function and returns a collection of mentions as hash objects as a first parameter.
     </td>
   </tr>
 </table>
 
 <h2>Query data structure</h2>
 
-<p>When the component is preforming a "query" to the onDataRequest-callback, its expecting a specific data structure to be returned. </p>
+<p>When the component is preforming a "query" on the data specified through the onDataRequest-callback, it's expecting a specific data structure to be returned. </p>
 <pre>
 {
   'id'    : 1,
@@ -181,13 +184,13 @@ $('textarea.mention').mentionsInput({
 }
 </pre>
 
-<p>"avatar" property is a URL used for image avatars if "showAvatars"-option is enabled </p>
-<p>"icon" property is a className used for avatars if "showAvatars"-option is disabled</p>
-<p>"type" property is used to define what object type is it (used in the syntaxed mention text)</p>
+<p>"avatar" property is a URL used for image avatars when  "showAvatars"-option is enabled </p>
+<p>"icon" property is a className used for avatars when "showAvatars"-option is disabled</p>
+<p>"type" property specifies an object type which is used in the marked-up version of the mentions result</p>
 
 
-<h2>Syntax text format</h2>
-<p>When mentions are being added to the input, a syntax text version of the text is generated, to allow the mentions to be extracted, parsed and stored somewhere. </p>
+<h2>Markup format</h2>
+<p>When mentions are being added to the input, a marked-up version of the value is generated, to allow the mentions to be extracted, parsed and stored later. </p>
 <pre>
   This is a message for @[name](type:id)
 </pre>
@@ -198,19 +201,19 @@ $('textarea.mention').mentionsInput({
 
 
 <h2>Browser support</h2>
-<p>We have tested jquery.mentionsInput in Firefox 6+, Chrome 15+, and Internet Explorer 8+. </p>
-<p>Please let us know if you see any weirdness. And no, we will no make it work for older browsers. Period. </p>
+<p>jquery.mentionsInput has been tested in Firefox 6+, Chrome 15+, and Internet Explorer 8+. </p>
+<p>Please let us know if you see anythin weired. And no, we will no make it work for older browsers. Period. </p>
 
 <h2>Dependencies</h2>
 <p>jquery.mentionsInput is written as a jQuery extension, so it naturally requires jQuery. In addition to jQuery, it also depends on <a href="http://documentcloud.github.com/underscore/">underscore.js</a>, which is used to simplify stuff a bit.</p>
 
-<p>The component is also using the new HTML5 "input" event. This means older browsers like IE8, would need a polyfil. which is bundled, that emulates the event.</p>
+<p>The component is also using the new HTML5 "input" event. This means older browsers like IE8 need a polyfill which emulates the event (it is bundled).</p>
 
-<p>The component itself is implemented as a small independent function, so it would easily be ported to other frameworks than jQuery. </p>
+<p>The component itself is implemented as a small independent function, so it can easily be ported to frameworks other than jQuery. </p>
 
-<p>Furthermore all utility functions has been centralized in the utils-object, which can be replaced with references if you already got functions to htmlEncode, etc. </p>
+<p>Furthermore all utility functions have been centralized in the utils-object, which can be replaced with references if you already got functions like htmlEncode, etc. </p>
 
-<p>To make the component grow and shrink to fit it’s content, it also depends on <a href="http://www.unwrongest.com/projects/elastic">jquery.elastic.js</a></p>
+<p>To make the component grow and shrink to fit it’s content, you can include <a href="http://www.unwrongest.com/projects/elastic">jquery.elastic.js</a> (which is totally optional)</p>
 
 <h2>License</h2>
 <p>MIT License - <a href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
