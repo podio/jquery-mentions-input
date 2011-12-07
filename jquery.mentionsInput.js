@@ -159,21 +159,18 @@
         value : value
       });
 
-      elmInputBox.val(updatedMessageText);
-
-      // Set correct focus and selection
-      utils.setCaratPosition(elmInputBox[0], startEndIndex);
-
-      elmInputBox.focus();
-
-      // Mentions & syntax message
-      updateValues();
-
-      // Cleaning
+      // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
       currentDataQuery = '';
-
       hideAutoComplete();
+
+      // Mentions & syntax message
+      elmInputBox.val(updatedMessageText);
+      updateValues();
+
+      // Set correct focus and selection
+      elmInputBox.focus();
+      utils.setCaratPosition(elmInputBox[0], startEndIndex);
     }
 
     function getInputBoxValue() {
