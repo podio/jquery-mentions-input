@@ -169,11 +169,11 @@
       // Mentions & syntax message
       updateValues();
 
-      hideAutoComplete();
-
       // Cleaning
       resetBuffer();
       currentDataQuery = '';
+
+      hideAutoComplete();
     }
 
     function getInputBoxValue() {
