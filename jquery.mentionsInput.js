@@ -35,7 +35,7 @@
 
   var utils = {
     htmlEncode       : function (str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\x22/g, '&quot;').replace(/\x27/g, '&#39;');
+      return _.escape(str);
     },
     highlightTerm    : function (value, term) {
       if (!term && !term.length) {
