@@ -35,7 +35,7 @@
 
   var utils = {
     htmlEncode       : function (str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\x22/g, '&quot;').replace(/\x27/g, '&#39;');
+      return _.escape(str);
     },
     highlightTerm    : function (value, term) {
       if (!term && !term.length) {
@@ -159,21 +159,18 @@
         value : value
       });
 
-      elmInputBox.val(updatedMessageText);
-
-      // Set correct focus and selection
-      utils.setCaratPosition(elmInputBox[0], startEndIndex);
-
-      elmInputBox.focus();
-
-      // Mentions & syntax message
-      updateValues();
-
-      hideAutoComplete();
-
-      // Cleaning
+      // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
       currentDataQuery = '';
+      hideAutoComplete();
+
+      // Mentions & syntax message
+      elmInputBox.val(updatedMessageText);
+      updateValues();
+
+      // Set correct focus and selection
+      elmInputBox.focus();
+      utils.setCaratPosition(elmInputBox[0], startEndIndex);
     }
 
     function getInputBoxValue() {
