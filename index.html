@@ -92,10 +92,11 @@ $('textarea.mention').mentionsInput({
 <table>
   <tr>
     <td><b>onDataRequest</b></td>
-    <td><tt>function(mode, query, callback)</tt></td>
+    <td><tt>function(mode, query, callback, triggerChar)</tt></td>
     <td class="definition">
       This function is a callback function which is used to provide data for the autocomplete. When a search starts
       this function is called with following arguments: 'search', the query (what's been typed), and a callback function which needs to be called inside onDataRequest with a data collection to be searched on as a first argument.
+      'triggerChar' which is the character that started this data request, so you can take different actions on a '@' or '#'.
     </td>
   </tr>
   <tr>
@@ -103,7 +104,8 @@ $('textarea.mention').mentionsInput({
     <td><tt>@</tt></td>
     <td class="definition">
       Trigger character which triggers the mentions search, when the character has been typed into the
-      mentions input field.
+      mentions input field. You can specify more than one trigger char by providing an array. 
+      eg triggerChar : ['@', '#']
     </td>
   </tr>
   <tr>
@@ -199,12 +201,13 @@ $('textarea.mention').mentionsInput({
 <h2>Markup format</h2>
 <p>When mentions are being added to the input, a marked-up version of the value is generated, to allow the mentions to be extracted, parsed and stored later. </p>
 <pre>
-  This is a message for @[name](type:id)
+  This is a message for @[name](type:id) #[tag](type:id)
 </pre>
 <p>Like:</p>
 <pre>
-  This is a message for @[Kenneth Auchenberg](contact:1)
+  This is a message for @[Kenneth Auchenberg](contact:1) #[Issue 22](tag:22)
 </pre>
+
 
 
 <h2>Browser support</h2>
