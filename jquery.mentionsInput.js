@@ -82,6 +82,7 @@
       elmInputBox.attr('data-mentions-input', 'true');
       elmInputBox.bind('keydown', onInputBoxKeyDown);
       elmInputBox.bind('keypress', onInputBoxKeyPress);
+	  elmInputBox.bind('blur', onInputBoxBlur);
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
@@ -188,6 +189,10 @@
 
     function onInputBoxClick(e) {
       resetBuffer();
+    }
+
+	function onInputBoxBlur(e) {
+      hideAutoComplete();
     }
 
     function onInputBoxInput(e) {
