@@ -18,6 +18,7 @@
     minChars      : 2,
     showAvatars   : true,
     elastic       : true,
+	display		  : 'name',
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -301,7 +302,7 @@
       _.each(results, function (item) {
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
-          'display' : utils.htmlEncode(item.name),
+          'display' : utils.htmlEncode(item[settings.display]),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
