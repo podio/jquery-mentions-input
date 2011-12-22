@@ -369,14 +369,9 @@
   $.fn.mentionsInput = function (method, settings) {
 
     if (typeof method === 'object' || !method) {
-      settings = method;
+      settings = $.extend(true, {}, defaultSettings, method);
     }
 
-    if (!settings) {
-      settings = {};
-    }
-
-    settings = _.defaults(settings, defaultSettings);
     var outerArguments = arguments;
 
     return this.each(function () {
