@@ -139,7 +139,7 @@
 
     function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
-      var currentTriggerChar = $(this).data('triggerChar');
+      var currentTriggerChar = elmInputBox.data('triggerChar');
 
       // Using a regex to figure out positions
       var regex = new RegExp("\\" + currentTriggerChar + currentDataQuery, "gi");
@@ -327,7 +327,7 @@
       if (query && query.length && query.length >= settings.minChars) {
         settings.onDataRequest.call(this, 'search', query, function (responseData) {
           populateDropdown(query, responseData);
-          $(this).data('triggerChar', triggerChar);
+          elmInputBox.data('triggerChar', triggerChar);
         }, triggerChar);
       }
     }
