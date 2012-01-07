@@ -18,6 +18,7 @@
     minChars      : 2,
     showAvatars   : true,
     elastic       : true,
+	display		  : 'name',
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -28,7 +29,7 @@
       autocompleteListItemAvatar : _.template('<img  src="<%= avatar %>" />'),
       autocompleteListItemIcon   : _.template('<div class="icon <%= icon %>"></div>'),
       mentionsOverlay            : _.template('<div class="mentions"><div></div></div>'),
-      mentionItemSyntax          : _.template('@[<%= value %>](<%= type %>:<%= id %>)'),
+      mentionItemSyntax          : _.template('<%= triggerChar %>[<%= value %>](<%= type %>:<%= id %>)'),
       mentionItemHighlight       : _.template('<strong><span><%= value %></span></strong>')
     }
   };
@@ -104,14 +105,14 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : 'contact', id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : mention.type, id : mention.id, triggerChar: mention.trigger });
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : 'contact', id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : mention.type, id : mention.id, triggerChar: mention.trigger  });
         var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
@@ -139,9 +140,10 @@
 
     function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
+      var currentTriggerChar = elmInputBox.data('triggerChar');
 
       // Using a regex to figure out positions
-      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+      var regex = new RegExp("\\" + currentTriggerChar + currentDataQuery, "gi");
       regex.exec(currentMessage);
 
       var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
@@ -156,7 +158,8 @@
       mentionsCollection.push({
         id    : id,
         type  : type,
-        value : value
+        value : value,
+        trigger : currentTriggerChar
       });
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
@@ -189,17 +192,26 @@
       resetBuffer();
     }
 
+    function checkTriggerChar(inputBuffer, triggerChar) {
+      var triggerCharIndex = _.lastIndexOf(inputBuffer, triggerChar);
+      if (triggerCharIndex > -1) {
+        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+        _.defer(_.bind(doSearch, this, currentDataQuery, triggerChar));
+      }
+    }
     function onInputBoxInput(e) {
       updateValues();
       updateMentionsCollection();
       hideAutoComplete();
 
-      var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if (triggerCharIndex > -1) {
-        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+	  if (_.isArray(settings.triggerChar)) {
+		_.each(settings.triggerChar, function (triggerChar) {
+			checkTriggerChar(inputBuffer, triggerChar);
+		});
+	  } else {
+		checkTriggerChar(inputBuffer, settings.triggerChar);
+	  }
 
-        _.defer(_.bind(doSearch, this, currentDataQuery));
-      }
     }
 
     function onInputBoxKeyPress(e) {
@@ -290,7 +302,7 @@
       _.each(results, function (item, index) {
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
-          'display' : utils.htmlEncode(item.name),
+          'display' : utils.htmlEncode(item[settings.display]),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
@@ -316,11 +328,12 @@
       elmDropDownList.show();
     }
 
-    function doSearch(query) {
+    function doSearch(query, triggerChar) {
       if (query && query.length && query.length >= settings.minChars) {
         settings.onDataRequest.call(this, 'search', query, function (responseData) {
           populateDropdown(query, responseData);
-        });
+          elmInputBox.data('triggerChar', triggerChar);
+        }, triggerChar);
       }
     }
 
@@ -338,7 +351,6 @@
         if (!_.isFunction(callback)) {
           return;
         }
-
         var value = mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue();
         callback.call(this, value);
       },
