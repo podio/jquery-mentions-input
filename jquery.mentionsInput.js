@@ -295,7 +295,9 @@
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
 
-        if (index === 0) { selectAutoCompleteItem(elmListItem); }
+        if (index === 0) { 
+          selectAutoCompleteItem(elmListItem); 
+        }
 
         if (settings.showAvatars) {
           var elmIcon;
