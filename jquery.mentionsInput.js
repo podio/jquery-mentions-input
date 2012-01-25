@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.0
+ * Version 1.1
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
