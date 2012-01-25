@@ -17,7 +17,6 @@
     onDataRequest : $.noop,
     minChars      : 2,
     showAvatars   : true,
-    elastic       : true,
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -87,9 +86,7 @@
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
-      if (settings.elastic) {
-        elmInputBox.elastic();
-      }
+      elmInputBox.elastic();
     }
 
     function initAutocomplete() {
