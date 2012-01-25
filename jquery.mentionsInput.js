@@ -18,6 +18,7 @@
     minChars      : 2,
     showAvatars   : true,
     elastic       : true,
+	display		  : 'name',
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -84,6 +85,7 @@
       elmInputBox.attr('data-mentions-input', 'true');
       elmInputBox.bind('keydown', onInputBoxKeyDown);
       elmInputBox.bind('keypress', onInputBoxKeyPress);
+	  elmInputBox.bind('blur', onInputBoxBlur);
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
@@ -192,6 +194,10 @@
       resetBuffer();
     }
 
+	function onInputBoxBlur(e) {
+      hideAutoComplete();
+    }
+
     function onInputBoxInput(e) {
       updateValues();
       updateMentionsCollection();
@@ -294,7 +300,7 @@
       _.each(results, function (item, index) {
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
-          'display' : utils.htmlEncode(item.name),
+          'display' : utils.htmlEncode(item[settings.display]),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
