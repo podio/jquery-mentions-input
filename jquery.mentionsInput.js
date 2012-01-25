@@ -56,6 +56,9 @@
           domNode.focus();
         }
       }
+    },
+    rtrim: function(string) {
+      return string.replace(/\s+$/,"");
     }
   };
 
@@ -197,6 +200,7 @@
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
       if (triggerCharIndex > -1) {
         currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+        currentDataQuery = utils.rtrim(currentDataQuery);
 
         _.defer(_.bind(doSearch, this, currentDataQuery));
       }
