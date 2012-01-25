@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.0
+ * Version 1.0.1
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
@@ -17,7 +17,6 @@
     onDataRequest : $.noop,
     minChars      : 2,
     showAvatars   : true,
-    elastic       : true,
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -56,6 +55,9 @@
           domNode.focus();
         }
       }
+    },
+    rtrim: function(string) {
+      return string.replace(/\s+$/,"");
     }
   };
 
@@ -84,9 +86,7 @@
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
-      if (settings.elastic) {
-        elmInputBox.elastic();
-      }
+      elmInputBox.elastic();
     }
 
     function initAutocomplete() {
@@ -104,14 +104,14 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : 'contact', id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : mention.type, id : mention.id });
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : 'contact', id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : mention.type, id : mention.id });
         var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
@@ -197,6 +197,7 @@
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
       if (triggerCharIndex > -1) {
         currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+        currentDataQuery = utils.rtrim(currentDataQuery);
 
         _.defer(_.bind(doSearch, this, currentDataQuery));
       }
@@ -287,13 +288,17 @@
       elmAutocompleteList.empty();
       var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
 
-      _.each(results, function (item) {
+      _.each(results, function (item, index) {
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
         }));
+
+        if (index === 0) { 
+          selectAutoCompleteItem(elmListItem); 
+        }
 
         if (settings.showAvatars) {
           var elmIcon;
@@ -358,14 +363,9 @@
   $.fn.mentionsInput = function (method, settings) {
 
     if (typeof method === 'object' || !method) {
-      settings = method;
+      settings = $.extend(true, {}, defaultSettings, method);
     }
 
-    if (!settings) {
-      settings = {};
-    }
-
-    settings = _.defaults(settings, defaultSettings);
     var outerArguments = arguments;
 
     return this.each(function () {
