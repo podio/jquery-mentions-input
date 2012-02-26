@@ -293,11 +293,12 @@
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
-          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
+          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query),
+          'item'    : item
         }));
 
-        if (index === 0) { 
-          selectAutoCompleteItem(elmListItem); 
+        if (index === 0) {
+          selectAutoCompleteItem(elmListItem);
         }
 
         if (settings.showAvatars) {
