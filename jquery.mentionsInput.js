@@ -13,14 +13,15 @@
   // Settings
   var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
-    triggerChar   : '@',
-    onDataRequest : $.noop,
-    minChars      : 2,
-    showAvatars   : true,
-    classes       : {
+    triggerChar     : '@',
+    fullNameTrigger : false,
+    onDataRequest   : $.noop,
+    minChars        : 2,
+    showAvatars     : true,
+    classes         : {
       autoCompleteItemActive : "active"
     },
-    templates     : {
+    templates       : {
       wrapper                    : _.template('<div class="mentions-input-box"></div>'),
       autocompleteList           : _.template('<div class="mentions-autocomplete-list"></div>'),
       autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
@@ -55,6 +56,48 @@
           domNode.focus();
         }
       }
+    },
+    getCaratPosition : function (domNode) {
+      if(typeof(domNode.selectionStart) == "number") {
+        start = domNode.selectionStart;
+        end = domNode.selectionEnd;
+      }
+
+      else if(document.selection) {
+        var range = document.selection.createRange();
+        if (range.parentElement().id == domNode.id) {
+          // Create a selection of the whole textarea
+          var range_all = document.body.createTextRange();
+          range_all.moveToElementText(domNode);
+
+          // Calculate selection start point by moving beginning of range_all to beginning of range
+          for (start=0; range_all.compareEndPoints("StartToStart", range) < 0; start++) {
+            range_all.moveStart('character', 1);
+          }
+
+          for (var i = 0; i <= start; i ++) {
+            if (domNode.value.charAt(i) == '\n')
+            start++;
+          }
+
+          // Create a selection of the whole textarea
+          var range_all = document.body.createTextRange();
+          range_all.moveToElementText(domNode);
+
+          // Calculate selection end point by moving beginning of range_all to end of range
+          for (end = 0; range_all.compareEndPoints('StartToEnd', range) < 0; end ++) {
+            range_all.moveStart('character', 1);
+          }
+
+          // Get number of line breaks from textarea start to selection end and add them to end
+          for (var i = 0; i <= end; i ++){
+            if (domNode.value.charAt(i) == '\n') {
+              end ++;
+            }
+          }
+        }
+      }
+      return end;
     },
     rtrim: function(string) {
       return string.replace(/\s+$/,"");
@@ -140,12 +183,26 @@
     function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
 
-      // Using a regex to figure out positions
-      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
-      regex.exec(currentMessage);
+      if (settings.fullNameTrigger) {
+        // Get the actual carat position using some black magic
+        var currentCaretPosition = utils.getCaratPosition(elmInputBox[0]);
+        var startCaretPosition = currentCaretPosition - currentDataQuery.length;
 
-      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
-      var currentCaretPosition = regex.lastIndex;
+        // Find where to start inserting mention
+        var matchLen = value.indexOf(currentDataQuery) + currentDataQuery.length;
+        var curMessage = currentMessage.substring(0, currentCaretPosition);
+        if(curMessage.substring(curMessage.length - matchLen) ==  value.substring(0, matchLen)){
+          startCaretPosition -= value.indexOf(currentDataQuery);
+        }
+      }
+      else {
+        // Using a regex to figure out positions
+        var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+        regex.exec(currentMessage);
+
+        var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
+        var currentCaretPosition = regex.lastIndex;
+      }
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
@@ -194,13 +251,22 @@
       updateMentionsCollection();
       hideAutoComplete();
 
-      var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if (triggerCharIndex > -1) {
-        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
-        currentDataQuery = utils.rtrim(currentDataQuery);
-
-        _.defer(_.bind(doSearch, this, currentDataQuery));
+      // spacebreak
+      var space_index = _.lastIndexOf(inputBuffer, " ");
+      if (space_index > -1) {
+        inputBuffer = inputBuffer.slice(space_index + 1);
       }
+
+      if (settings.fullNameTrigger)
+        currentDataQuery = inputBuffer.join('');
+      else {
+        var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
+        if (triggerCharIndex > -1) {
+          currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+          currentDataQuery = utils.rtrim(currentDataQuery);
+        }
+      }
+      _.defer(_.bind(doSearch, this, currentDataQuery));
     }
 
     function onInputBoxKeyPress(e) {
@@ -209,7 +275,6 @@
     }
 
     function onInputBoxKeyDown(e) {
-
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
@@ -320,7 +385,26 @@
 
     function doSearch(query) {
       if (query && query.length && query.length >= settings.minChars) {
+        if (settings.fullNameTrigger) {
+          doSearchFullNameTrigger(query);
+        } else {
+          settings.onDataRequest.call(this, 'search', query, function (responseData) {
+            populateDropdown(query, responseData);
+          });
+        }
+      }
+    }
+
+    function doSearchFullNameTrigger(query) {
+      query = query.substring(query.lastIndexOf(" ") + 1);
+      var regexp = /[A-Z][a-z]/g;
+      var arr = query.match(regexp);
+      if(arr) {
+        query = query.substring(query.lastIndexOf(arr[arr.length - 1]));
+        if(query.length < settings.minChars) { return; }
+
         settings.onDataRequest.call(this, 'search', query, function (responseData) {
+          currentDataQuery = query;
           populateDropdown(query, responseData);
         });
       }
@@ -362,7 +446,6 @@
   };
 
   $.fn.mentionsInput = function (method, settings) {
-
     if (typeof method === 'object' || !method) {
       settings = $.extend(true, {}, defaultSettings, method);
     }
