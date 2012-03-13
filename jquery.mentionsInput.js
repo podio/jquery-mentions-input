@@ -110,6 +110,7 @@
     var mentionsCollection = [];
     var inputBuffer = [];
     var currentDataQuery;
+    var cursorEndPosition;
 
     function initTextarea() {
       elmInputBox = $(input);
@@ -129,6 +130,10 @@
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
 
+      if (settings.fullNameTrigger) {
+        elmInputBox.bind('keyup mousedown mouseup focus', saveCursorPosition);
+      }
+
       elmInputBox.elastic();
     }
 
@@ -141,6 +146,10 @@
     function initMentionsOverlay() {
       elmMentionsOverlay = $(settings.templates.mentionsOverlay());
       elmMentionsOverlay.prependTo(elmWrapperBox);
+    }
+
+    function saveCursorPosition(e) {
+      cursorEndPosition = utils.getCaratPosition(e.target);
     }
 
     function updateValues() {
@@ -185,7 +194,7 @@
 
       if (settings.fullNameTrigger) {
         // Get the actual carat position using some black magic
-        var currentCaretPosition = utils.getCaratPosition(elmInputBox[0]);
+        var currentCaretPosition = cursorEndPosition;
         var startCaretPosition = currentCaretPosition - currentDataQuery.length;
 
         // Find where to start inserting mention
@@ -251,7 +260,6 @@
       updateMentionsCollection();
       hideAutoComplete();
 
-      // spacebreak
       var space_index = _.lastIndexOf(inputBuffer, " ");
       if (space_index > -1) {
         inputBuffer = inputBuffer.slice(space_index + 1);
