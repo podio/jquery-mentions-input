@@ -366,8 +366,9 @@
         callback.call(this, mentionsCollection);
       },
       
-      addReply : function (value, id, type) {
+      addMention : function (value, id, type) {
         addMention(value, id, type);
+        
       },
     };
   };
