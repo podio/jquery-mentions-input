@@ -139,19 +139,25 @@
 
     function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
+      var updatedMessageText;
 
-      // Using a regex to figure out positions
-      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
-      regex.exec(currentMessage);
+      if(currentDataQuery) {
+        // Using a regex to figure out positions
+        var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+        regex.exec(currentMessage);
 
-      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
-      var currentCaretPosition = regex.lastIndex;
+        var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
+        var currentCaretPosition = regex.lastIndex;
 
-      var start = currentMessage.substr(0, startCaretPosition);
-      var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + value).length;
+        var start = currentMessage.substr(0, startCaretPosition);
+        var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
+        var startEndIndex = (start + value).length;
 
-      var updatedMessageText = start + value + end;
+        updatedMessageText = start + value + end;
+      }
+      else {
+        updatedMessageText = currentMessage + value;
+      }
 
       mentionsCollection.push({
         id    : id,
@@ -358,7 +364,11 @@
         }
 
         callback.call(this, mentionsCollection);
-      }
+      },
+      
+      addReply : function (value, id, type) {
+        addMention(value, id, type);
+      },
     };
   };
 
