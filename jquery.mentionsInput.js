@@ -139,6 +139,13 @@
 
     function addMention(value, id, type) {
       var currentMessage = getInputBoxValue();
+      
+      // Check for duplicates
+      var ids = _.pluck(mentionsCollection, 'id');
+      if(_.include(ids, id)) {
+        return;
+      }
+      
       var updatedMessageText;
 
       if(currentDataQuery) {
