@@ -176,11 +176,7 @@
 
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
-      var mention = {
-        'value': elmTarget.attr('data-display'),
-        'id':    elmTarget.attr('data-ref-id'),
-        'type':  elmTarget.attr('data-ref-type')
-      };
+      var mention = document[elmTarget.attr('data-uid')];
 
       addMention(mention);
 
@@ -293,15 +289,18 @@
       var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
 
       _.each(results, function (item, index) {
+        var itemUid = _.uniqueId('mention_');
+        document[itemUid] = _.extend({}, item, {value: item.name});
+
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
-        }));
+        })).attr('data-uid', itemUid);
 
-        if (index === 0) { 
-          selectAutoCompleteItem(elmListItem); 
+        if (index === 0) {
+          selectAutoCompleteItem(elmListItem);
         }
 
         if (settings.showAvatars) {
