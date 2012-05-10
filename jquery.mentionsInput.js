@@ -327,6 +327,12 @@
       }
     }
 
+    function reset() {
+      elmInputBox.val('');
+      mentionsCollection = [];
+      updateValues();
+    }
+
     // Public methods
     return {
       init : function (options) {
@@ -335,6 +341,7 @@
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
+        reset();
       },
 
       val : function (callback) {
@@ -347,9 +354,7 @@
       },
 
       reset : function () {
-        elmInputBox.val('');
-        mentionsCollection = [];
-        updateValues();
+        reset();
       },
 
       getMentions : function (callback) {
