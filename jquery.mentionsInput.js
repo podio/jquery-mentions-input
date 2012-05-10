@@ -137,7 +137,7 @@
       mentionsCollection = _.compact(mentionsCollection);
     }
 
-    function addMention(value, id, type) {
+    function addMention(mention) {
       var currentMessage = getInputBoxValue();
 
       // Using a regex to figure out positions
@@ -149,15 +149,11 @@
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + value).length;
+      var startEndIndex = (start + mention.value).length;
 
-      var updatedMessageText = start + value + end;
+      var updatedMessageText = start + mention.value + end;
 
-      mentionsCollection.push({
-        id    : id,
-        type  : type,
-        value : value
-      });
+      mentionsCollection.push(mention);
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
@@ -179,8 +175,13 @@
 
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
+      var mention = {
+        'value': elmTarget.attr('data-display'),
+        'id':    elmTarget.attr('data-ref-id'),
+        'type':  elmTarget.attr('data-ref-type')
+      };
 
-      addMention(elmTarget.attr('data-display'), elmTarget.attr('data-ref-id'), elmTarget.attr('data-ref-type'));
+      addMention(mention);
 
       return false;
     }
