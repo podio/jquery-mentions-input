@@ -337,6 +337,10 @@
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
+
+        if( options.prefillMention ) {
+          addMention(options.prefillMention);
+        }
       },
 
       val : function (callback) {
