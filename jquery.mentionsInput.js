@@ -145,7 +145,7 @@
       
       // Check for duplicates
       var ids = _.pluck(mentionsCollection, 'id');
-      if(_.include(ids, id)) {
+      if(_.include(ids, mention.id)) {
         return;
       }
       
@@ -168,7 +168,7 @@
         cursorPosition = startEndIndex;
       }
       else {
-        updatedMessageText = currentMessage + value;
+        updatedMessageText = currentMessage + mention.value;
         cursorPosition = updatedMessageText.length;
       }
 
