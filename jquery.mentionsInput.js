@@ -94,7 +94,7 @@
     function initAutocomplete() {
       elmAutocompleteList = $(settings.templates.autocompleteList());
       elmAutocompleteList.appendTo(elmWrapperBox);
-      elmAutocompleteList.delegate('li', 'click', onAutoCompleteItemClick);
+      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick);
     }
 
     function initMentionsOverlay() {
@@ -255,7 +255,7 @@
         case KEY.RETURN:
         case KEY.TAB:
           if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-            elmActiveAutoCompleteItem.click();
+            elmActiveAutoCompleteItem.trigger('mousedown');
             return false;
           }
 
