@@ -18,6 +18,7 @@
     minChars                  : 2,
     showAvatars               : true,
     elastic                   : true,
+    insertSpaceAfterMention   : false,
     classes                   : {
       autoCompleteItemActive  : "active"
     },
@@ -161,6 +162,10 @@
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
       var startEndIndex = (start + mention.value).length;
 
+      if(settings.insertSpaceAfterMention) {
+        startEndIndex = startEndIndex + 1;
+      }
+
       mentionsCollection.push(mention);
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
@@ -170,6 +175,9 @@
 
       // Mentions & syntax message
       var updatedMessageText = start + mention.value;
+      if(settings.insertSpaceAfterMention) {
+        updatedMessageText = updatedMessageText+ ' ';
+      }
       updatedMessageText = updatedMessageText + end;
 
       elmInputBox.val(updatedMessageText);
