@@ -13,15 +13,15 @@
   // Settings
   var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
-    triggerChar   : '@',
-    onDataRequest : $.noop,
-    minChars      : 2,
-    showAvatars   : true,
-    elastic       : true,
-    classes       : {
-      autoCompleteItemActive : "active"
+    triggerChar               : '@',
+    onDataRequest             : $.noop,
+    minChars                  : 2,
+    showAvatars               : true,
+    elastic                   : true,
+    classes                   : {
+      autoCompleteItemActive  : "active"
     },
-    templates     : {
+    templates                 : {
       wrapper                    : _.template('<div class="mentions-input-box"></div>'),
       autocompleteList           : _.template('<div class="mentions-autocomplete-list"></div>'),
       autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
@@ -159,7 +159,7 @@
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + mention.value).length + 1;
+      var startEndIndex = (start + mention.value).length;
 
       mentionsCollection.push(mention);
 
@@ -169,7 +169,9 @@
       hideAutoComplete();
 
       // Mentions & syntax message
-      var updatedMessageText = start + mention.value + ' ' + end;
+      var updatedMessageText = start + mention.value;
+      updatedMessageText = updatedMessageText + end;
+
       elmInputBox.val(updatedMessageText);
       updateValues();
 
@@ -200,12 +202,13 @@
     }
 
     function onInputBoxInput(e) {
+
       updateValues();
       updateMentionsCollection();
       hideAutoComplete();
 
       var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if (triggerCharIndex > -1) {
+      if (triggerCharIndex === 0) {
         currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
         currentDataQuery = utils.rtrim(currentDataQuery);
 
@@ -223,7 +226,7 @@
     function onInputBoxKeyDown(e) {
 
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
-      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
+      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END ) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
         _.defer(resetBuffer);
 
@@ -233,6 +236,19 @@
         if (navigator.userAgent.indexOf("MSIE 9") > -1) {
           _.defer(updateValues);
         }
+
+        return;
+      }
+
+      // Special handling for space, since we want to reset buffer on space, but only when autocompleter is hidden
+      if ( e.keyCode == KEY.SPACE ) {
+
+        if ( elmAutocompleteList.is(':visible') ) {
+          // Allow spaces when autcompleter is visible
+          return;
+        }
+
+        _.defer(resetBuffer);
 
         return;
       }
