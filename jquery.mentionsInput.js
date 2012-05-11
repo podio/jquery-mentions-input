@@ -375,7 +375,8 @@
       
       addMention : function (value, id, type) {
         addMention(value, id, type);
-        
+        contents = $(this).val();
+        $(this).val(contents);
       },
     };
   };
