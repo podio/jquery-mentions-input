@@ -148,6 +148,7 @@
     }
 
     function addMention(mention) {
+
       var currentMessage = getInputBoxValue();
 
       // Using a regex to figure out positions
@@ -159,9 +160,7 @@
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + mention.value).length;
-
-      var updatedMessageText = start + mention.value + end;
+      var startEndIndex = (start + mention.value).length + 1;
 
       mentionsCollection.push(mention);
 
@@ -171,6 +170,7 @@
       hideAutoComplete();
 
       // Mentions & syntax message
+      var updatedMessageText = start + mention.value + ' ' + end;
       elmInputBox.val(updatedMessageText);
       updateValues();
 
