@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.0.1
+ * Version 1.0.2
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
@@ -65,6 +65,7 @@
     var settings;
     var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
+    var autocompleteItemCollection = {};
     var inputBuffer = [];
     var currentDataQuery;
 
@@ -85,6 +86,7 @@
       elmInputBox.bind('keypress', onInputBoxKeyPress);
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
+      elmInputBox.bind('blur', onInputBoxBlur);
 
       elmInputBox.elastic();
     }
@@ -92,7 +94,7 @@
     function initAutocomplete() {
       elmAutocompleteList = $(settings.templates.autocompleteList());
       elmAutocompleteList.appendTo(elmWrapperBox);
-      elmAutocompleteList.delegate('li', 'click', onAutoCompleteItemClick);
+      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick);
     }
 
     function initMentionsOverlay() {
@@ -104,15 +106,16 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : mention.type, id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax(mention);
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : mention.type, id : mention.id });
-        var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
+        var formattedMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
+        var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
+        var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
@@ -137,7 +140,7 @@
       mentionsCollection = _.compact(mentionsCollection);
     }
 
-    function addMention(value, id, type) {
+    function addMention(mention) {
       var currentMessage = getInputBoxValue();
       
       // Check for duplicates
@@ -159,9 +162,9 @@
 
         var start = currentMessage.substr(0, startCaretPosition);
         var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-        var startEndIndex = (start + value).length;
+        var startEndIndex = (start + mention.value).length;
 
-        updatedMessageText = start + value + end;
+        updatedMessageText = start + mention.value + end;
         cursorPosition = startEndIndex;
       }
       else {
@@ -169,11 +172,7 @@
         cursorPosition = updatedMessageText.length;
       }
 
-      mentionsCollection.push({
-        id    : id,
-        type  : type,
-        value : value
-      });
+      mentionsCollection.push(mention);
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
@@ -195,14 +194,19 @@
 
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
+      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
 
-      addMention(elmTarget.attr('data-display'), elmTarget.attr('data-ref-id'), elmTarget.attr('data-ref-type'));
+      addMention(mention);
 
       return false;
     }
 
     function onInputBoxClick(e) {
       resetBuffer();
+    }
+
+    function onInputBoxBlur(e) {
+      hideAutoComplete();
     }
 
     function onInputBoxInput(e) {
@@ -232,6 +236,14 @@
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
         _.defer(resetBuffer);
+
+        // IE9 doesn't fire the oninput event when backspace or delete is pressed. This causes the highlighting
+        // to stay on the screen whenever backspace is pressed after a highlighed word. This is simply a hack
+        // to force updateValues() to fire when backspace/delete is pressed in IE9.
+        if (navigator.userAgent.indexOf("MSIE 9") > -1) {
+          _.defer(updateValues);
+        }
+
         return;
       }
 
@@ -267,7 +279,7 @@
         case KEY.RETURN:
         case KEY.TAB:
           if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-            elmActiveAutoCompleteItem.click();
+            elmActiveAutoCompleteItem.trigger('mousedown');
             return false;
           }
 
@@ -307,15 +319,19 @@
       var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
 
       _.each(results, function (item, index) {
+        var itemUid = _.uniqueId('mention_');
+
+        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
+
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
-        }));
+        })).attr('data-uid', itemUid);
 
-        if (index === 0) { 
-          selectAutoCompleteItem(elmListItem); 
+        if (index === 0) {
+          selectAutoCompleteItem(elmListItem);
         }
 
         if (settings.showAvatars) {
@@ -343,6 +359,12 @@
       }
     }
 
+    function resetInput() {
+      elmInputBox.val('');
+      mentionsCollection = [];
+      updateValues();
+    }
+
     // Public methods
     return {
       init : function (options) {
@@ -351,6 +373,12 @@
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
+        resetInput();
+
+        if( options.prefillMention ) {
+          addMention( options.prefillMention );
+        }
+
       },
 
       val : function (callback) {
@@ -363,9 +391,7 @@
       },
 
       reset : function () {
-        elmInputBox.val('');
-        mentionsCollection = [];
-        updateValues();
+        resetInput();
       },
 
       getMentions : function (callback) {
@@ -377,7 +403,7 @@
       },
       
       addMention : function (value, id, type) {
-        addMention(value, id, type);
+        addMention({ value: value, id: id, type: type });
       },
     };
   };

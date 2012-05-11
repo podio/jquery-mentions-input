@@ -1,0 +1,128 @@
+body {
+    background: #f6f6f6;
+    color: #192535;
+    font-family: 'pt sans', arial, helvetica, sans-serif;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+div.container {
+    font-size: 16px;
+    width: 720px;
+    padding: 50px 0 50px 50px;
+}
+
+div.container > p,
+div.container > li,
+div.container > ol {
+    margin: 16px 0 16px 0;
+    width: 550px;
+}
+
+div.examples {
+    width: 560px;
+}
+
+.examples .mentions-input-box {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.examples .mentions-input-box textarea {
+    font-family: 'pt sans', arial, helvetica, sans-serif;
+    font-size: 14px;
+}
+
+
+a, a:visited {
+    padding: 0 2px;
+    text-decoration: none;
+    background: #eee;
+    color: #00639e;
+}
+
+a:active, a:hover {
+    color: #000;
+    background: #bacada;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 40px;
+    font-weight: normal;
+}
+
+h1 {
+    font-size: 56px;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+b.header {
+    font-size: 18px;
+}
+
+span.alias {
+    font-size: 14px;
+    font-style: italic;
+    margin-left: 20px;
+}
+
+table {
+    margin: 16px 0;
+    padding: 0;
+}
+
+tr, td {
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
+
+td {
+    padding: 9px 15px 9px 0;
+}
+
+td.definition {
+    line-height: 18px;
+    font-size: 14px;
+}
+
+code, pre, tt {
+    font-family: Monaco, Consolas, "Lucida Console", monospace;
+    font-size: 12px;
+    line-height: 18px;
+    color: #294555;
+}
+
+code {
+    margin-left: 20px;
+}
+
+pre {
+    font-size: 12px;
+    padding: 2px 0 2px 12px;
+    border-left: 6px solid #99aabb;
+    margin: 0px 0 30px;
+}
+
+.button {
+    display: inline-block;
+    line-height: 24px;
+    margin-bottom: 4px;
+    font-weight: normal;
+    text-shadow: none;
+    padding: 1px 10px 1px 10px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    border-radius: 5px;
+
+    background: #eaeaea;
+    background: -moz-linear-gradient(top, hsl(0, 0%, 96%), #eaeaea);
+    background: -webkit-gradient(linear, left top, left bottom, from(#f6f6f6), to(#eaeaea));
+    border: 1px solid #dcdcdc;
+    color: #525252;
+}
