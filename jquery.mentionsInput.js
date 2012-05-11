@@ -61,16 +61,18 @@
     }
   };
 
-  var MentionsInput = function (input) {
-    var settings;
-    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
+  var MentionsInput = function (settings) {
+
+    var domInput, elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
     var autocompleteItemCollection = {};
     var inputBuffer = [];
     var currentDataQuery;
 
+    settings = $.extend(true, {}, defaultSettings, settings );
+
     function initTextarea() {
-      elmInputBox = $(input);
+      elmInputBox = $(domInput);
 
       if (elmInputBox.attr('data-mentions-input') == 'true') {
         return;
@@ -351,16 +353,17 @@
 
     // Public methods
     return {
-      init : function (options) {
-        settings = options;
+      init : function (domTarget) {
+
+        domInput = domTarget;
 
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
         resetInput();
 
-        if( options.prefillMention ) {
-          addMention( options.prefillMention );
+        if( settings.prefillMention ) {
+          addMention( settings.prefillMention );
         }
 
       },
@@ -390,20 +393,20 @@
 
   $.fn.mentionsInput = function (method, settings) {
 
-    if (typeof method === 'object' || !method) {
-      settings = $.extend(true, {}, defaultSettings, method);
-    }
-
     var outerArguments = arguments;
 
+    if (typeof method === 'object' || !method) {
+      settings = method;
+    }
+
     return this.each(function () {
-      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(this));
+      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(settings));
 
       if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
 
       } else if (typeof method === 'object' || !method) {
-        return instance.init.call(this, settings);
+        return instance.init.call(this, this);
 
       } else {
         $.error('Method ' + method + ' does not exist');
