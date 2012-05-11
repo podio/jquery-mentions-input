@@ -48,7 +48,7 @@
         range.move('character', caretPos);
         range.select();
       } else {
-        if (domNode.selectionStart) {
+        if (domNode.selectionStart != undefined) {
           domNode.focus();
           domNode.setSelectionRange(caretPos, caretPos);
         } else {
@@ -147,6 +147,7 @@
       }
       
       var updatedMessageText;
+      var cursorPosition;
 
       if(currentDataQuery) {
         // Using a regex to figure out positions
@@ -161,9 +162,11 @@
         var startEndIndex = (start + value).length;
 
         updatedMessageText = start + value + end;
+        cursorPosition = startEndIndex;
       }
       else {
         updatedMessageText = currentMessage + value;
+        cursorPosition = updatedMessageText.length;
       }
 
       mentionsCollection.push({
@@ -183,7 +186,7 @@
 
       // Set correct focus and selection
       elmInputBox.focus();
-      utils.setCaratPosition(elmInputBox[0], startEndIndex);
+      utils.setCaratPosition(elmInputBox[0], cursorPosition);
     }
 
     function getInputBoxValue() {
@@ -375,8 +378,6 @@
       
       addMention : function (value, id, type) {
         addMention(value, id, type);
-        contents = $(this).val();
-        $(this).val(contents);
       },
     };
   };
