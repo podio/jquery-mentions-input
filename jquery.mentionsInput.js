@@ -34,15 +34,13 @@
   };
 
   var utils = {
-    htmlEncode       : function (str) {
-      return _.escape(str);
-    },
     highlightTerm    : function (value, term) {
       if (!term && !term.length) {
         return value;
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
+
     setCaratPosition : function (domNode, caretPos) {
       if (domNode.createTextRange) {
         var range = domNode.createTextRange();
@@ -57,6 +55,7 @@
         }
       }
     },
+
     rtrim: function(string) {
       return string.replace(/\s+$/,"");
     }
@@ -117,10 +116,10 @@
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
-      var mentionText = utils.htmlEncode(syntaxMessage);
+      var mentionText = _.escape( syntaxMessage );
 
       _.each(mentionsCollection, function (mention) {
-        var formattedMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
+        var formattedMention = _.extend({}, mention, {value: _.escape( mention.value )});
         var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
         var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
 
@@ -315,10 +314,10 @@
         autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
 
         var elmListItem = $(settings.templates.autocompleteListItem({
-          'id'      : utils.htmlEncode(item.id),
-          'display' : utils.htmlEncode(item.name),
-          'type'    : utils.htmlEncode(item.type),
-          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
+          'id'      : _.escape( item.id ),
+          'display' : _.escape( item.name ),
+          'type'    : _.escape( item.type ),
+          'content' : utils.highlightTerm(_.escape( item.name ), query)
         })).attr('data-uid', itemUid);
 
         if (index === 0) {
