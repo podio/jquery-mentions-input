@@ -86,6 +86,7 @@
       elmInputBox.bind('keypress', onInputBoxKeyPress);
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
+      elmInputBox.bind('blur', onInputBoxBlur);
 
       elmInputBox.elastic();
     }
@@ -186,6 +187,10 @@
 
     function onInputBoxClick(e) {
       resetBuffer();
+    }
+
+    function onInputBoxBlur(e) {
+      hideAutoComplete();
     }
 
     function onInputBoxInput(e) {
