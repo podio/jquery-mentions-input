@@ -17,6 +17,7 @@
     onDataRequest : $.noop,
     minChars      : 2,
     showAvatars   : true,
+    elastic       : true,
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -90,7 +91,11 @@
       elmInputBox.bind('click', onInputBoxClick);
       elmInputBox.bind('blur', onInputBoxBlur);
 
-      elmInputBox.elastic();
+      // Elastic textareas, internal setting for the Dispora guys
+      if( settings.elastic ) {
+        elmInputBox.elastic();
+      }
+
     }
 
     function initAutocomplete() {
