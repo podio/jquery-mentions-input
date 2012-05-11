@@ -65,6 +65,7 @@
     var settings;
     var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
+    var autocompleteItemCollection = {};
     var inputBuffer = [];
     var currentDataQuery;
 
@@ -176,7 +177,7 @@
 
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
-      var mention = document[elmTarget.attr('data-uid')];
+      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
 
       addMention(mention);
 
@@ -290,7 +291,8 @@
 
       _.each(results, function (item, index) {
         var itemUid = _.uniqueId('mention_');
-        document[itemUid] = _.extend({}, item, {value: item.name});
+
+        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
 
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
