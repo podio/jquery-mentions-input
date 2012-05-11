@@ -112,9 +112,9 @@
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var fmtMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
-        var textSyntax = settings.templates.mentionItemSyntax(fmtMention);
-        var textHighlight = settings.templates.mentionItemHighlight(fmtMention);
+        var formattedMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
+        var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
+        var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
