@@ -122,16 +122,16 @@
       if (query && query.length && query.length >= this.settings.minChars) {
         this.autoCompleter.loading();
 
-        this.settings.onDataRequest.call(this, 'search', query, function (responseData) {
+        this.settings.onDataRequest.call(this, 'search', query, function (autoCompleteData) {
 
           // Filter items that has already been mentioned
-          var mentionValues = _.pluck(this.mentionsCollection, 'value');
+          var mentionValues = _.pluck(self.mentionsCollection, 'value');
 
-          responseData = _.reject(responseData, function (item) {
+          autoCompleteData = _.reject(autoCompleteData, function (item) {
             return _.include(mentionValues, item.name);
           });
 
-          self.autoCompleter.populate(responseData, query);
+          self.autoCompleter.populate(autoCompleteData, query);
 
         });
       } else {
