@@ -249,7 +249,6 @@
 
       this.updateValues();
       this.updateMentionsCollection();
-      this.hideAutoComplete();
 
       var triggerCharIndex = _.lastIndexOf( this.inputBuffer, this.settings.triggerChar );
 
@@ -258,6 +257,8 @@
         currentDataQuery = utils.rtrim(currentDataQuery);
 
         _.defer(_.bind( this._doSearch , this, currentDataQuery));
+      } else {
+        this.hideAutoComplete();
       }
     },
 
