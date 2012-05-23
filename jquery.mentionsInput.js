@@ -63,7 +63,6 @@
     this.inputBuffer = [];
     this.currentDataQuery = '';
 
-
     this.initialize.apply(this, arguments);
   };
 
@@ -244,7 +243,7 @@
     },
 
     getInputBoxValue: function() {
-      return $.trim( this.elmInputBox.val() );
+      return this.elmInputBox.val();
     },
 
     // Event handlers
@@ -257,6 +256,7 @@
     },
 
     onInputBoxInput: function(e) {
+
       this.updateValues();
       this.updateMentionsCollection();
       this.hideAutoComplete();
@@ -304,8 +304,6 @@
         }
 
         _.defer( this.resetBuffer );
-
-        return;
       }
 
       if (e.keyCode == KEY.BACKSPACE) {
@@ -347,47 +345,47 @@
   // AutocompleterProxy
   var defaultAutocompleterProxy = function (settings) {
 
-    _.extend(defaultAutocompleterProxy.prototype, {
-
-      initialize: function initAutocomplete(mentionsInput, elmWrapperBox) {
-        var self = this;
-        this.autoCompleter = new SimpleAutoCompleter(elmWrapperBox, {});
-
-        this.autoCompleter.onItemSelected.progress(function(item) {
-          mentionsInput.addMention( self.format(item) );
-        });
-      },
-
-      getSelectedItem: function() {
-        var item = this.autocompleter.getActiveItemData();
-        return this.format(item);
-      },
-
-      isVisible: function() {
-        return this.autoCompleter.isVisible();
-      },
-
-      hide: function() {
-        this.autoCompleter.hide();
-      },
-
-      format: function(item) {
-        return {
-          value:  item.name,
-          id:     item.id,
-          type:   item.type
-        };
-      },
-
-      populate: function() {
-        this.autoCompleter.populate.apply( this.autoCompleter, _.toArray(arguments) );
-      },
-
-      loading: $.noop
-
-   });
   };
 
+  _.extend(defaultAutocompleterProxy.prototype, {
+
+    initialize: function initAutocomplete(mentionsInput, elmWrapperBox) {
+      var self = this;
+      this.autoCompleter = new SimpleAutoCompleter(elmWrapperBox, {});
+
+      this.autoCompleter.onItemSelected.progress(function(item) {
+        mentionsInput.addMention( self.format(item) );
+      });
+    },
+
+    getSelectedItem: function() {
+      var item = this.autocompleter.getActiveItemData();
+      return this.format(item);
+    },
+
+    isVisible: function() {
+      return this.autoCompleter.isVisible();
+    },
+
+    hide: function() {
+      this.autoCompleter.hide();
+    },
+
+    format: function(item) {
+      return {
+        value:  item.name,
+        id:     item.id,
+        type:   item.type
+      };
+    },
+
+    populate: function() {
+      this.autoCompleter.populate.apply( this.autoCompleter, _.toArray(arguments) );
+    },
+
+    loading: $.noop
+
+ });
 
   // Exposing mentionsInput on jQuery-object
   $.fn.mentionsInput = function (method, settings) {
