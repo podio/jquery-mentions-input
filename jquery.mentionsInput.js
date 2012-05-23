@@ -1,7 +1,7 @@
 /*
  * Mentions Input
  * Version 1.5
- * Written by: Kenneth Auchenberg (Podio)
+ * Written by: Kenneth Auchenberg (Citrix Systems Inc)
  *
  * Using underscore.js
  *
