@@ -1,0 +1,98 @@
+.simple-autocompleter ul {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+
+  margin: 0px;
+  padding: 0px;
+
+  background: #fff;
+  border: 1px solid #b2b2b2;
+}
+
+.simple-autocompleter ul.hidden {
+  display: none;
+}
+
+.simple-autocompleter ul > li {
+  list-style: none;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  padding: 0 5px;
+  cursor: pointer;
+}
+
+.simple-autocompleter ul > li:last-child {
+  border-radius:5px;
+}
+
+.simple-autocompleter ul > li.item.active,
+.simple-autocompleter ul > li.item:hover {
+  background: #ecf3f8;
+}
+
+.simple-autocompleter ul > li.item.group,
+.simple-autocompleter ul > li.item.loading,
+.simple-autocompleter ul > li.item.empty {
+  color: #999999;
+  background-color: #f6f6f6;
+  padding-left: 9px;
+  height: 28px;
+  line-height: 28px;
+}
+
+.simple-autocompleter ul > li.item b {
+  background: #ffffdd;
+  font-weight: normal;
+}
+
+.simple-autocompleter ul > li.item em {
+  font-weight: bold;
+  font-style: none;
+}
+
+.simple-autocompleter ul > li.item img {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin-top:5px;
+}
+
+.simple-autocompleter ul > li.item .info {
+  margin-top: 5px !important;
+  margin-bottom: 5px;
+}
+
+
+.simple-autocompleter .image-block:after {
+    content    : "\0020";
+    display    : block;
+    width      : 0;
+    height     : 0;
+    clear      : both;
+    overflow   : hidden;
+    visibility : hidden;
+}
+
+.simple-autocompleter .image-block .bd {
+  overflow:hidden;
+  *overflow:visible;
+  zoom:1;
+}
+
+.simple-autocompleter .image-block .img {
+  float: left;
+}
+
+.simple-autocompleter .image-block .img.space-right {
+  margin-right: 5px;
+}
+
+.simple-autocompleter .image-block .img-ext {
+  float:right;
+}
