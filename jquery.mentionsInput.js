@@ -11,7 +11,7 @@
 (function ($, _, undefined) {
 
   // Settings
-  var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
+  var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
     triggerChar               : '@',
     onDataRequest             : $.noop,
