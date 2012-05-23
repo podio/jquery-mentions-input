@@ -340,8 +340,6 @@
         return;
       }
 
-      console.log(this);
-
       callback.call(this, this.mentionsCollection);
     }
   });
