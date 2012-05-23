@@ -70,7 +70,7 @@
 
     initialize : function(settings, domTarget) {
 
-      this.settings = $.extend(true, {}, defaultSettings, settings );
+      this.settings = settings;
 
       this.elmInputBox = $(domTarget);
 
@@ -345,6 +345,8 @@
     if (typeof method === 'object' || !method) {
       settings = method;
     }
+
+    settings = $.extend(true, {}, defaultSettings, settings );
 
     if( !settings.autoCompleter ) {
       settings.autoCompleter = $.fn.mentionsInput.defaultAutocompleterProxy;
