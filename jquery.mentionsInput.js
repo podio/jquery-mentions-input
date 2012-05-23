@@ -371,7 +371,7 @@
       },
 
       getSelectedItem: function() {
-        var item = this.autocompleter.getActiveItemData();
+        var item = this.autoCompleter.getActiveItemData();
         return this.format(item);
       },
 
