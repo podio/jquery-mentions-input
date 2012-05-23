@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.0.2
+ * Version 1.5
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
@@ -19,29 +19,16 @@
     showAvatars               : true,
     elastic                   : true,
     insertSpaceAfterMention   : false,
-    classes                   : {
-      autoCompleteItemActive  : "active"
-    },
+    resetOnInitialize         : false,
     templates                 : {
-      wrapper                    : _.template('<div class="mentions-input-box"></div>'),
-      autocompleteList           : _.template('<div class="mentions-autocomplete-list"></div>'),
-      autocompleteListItem       : _.template('<li data-ref-id="<%= id %>" data-ref-type="<%= type %>" data-display="<%= display %>"><%= content %></li>'),
-      autocompleteListItemAvatar : _.template('<img  src="<%= avatar %>" />'),
-      autocompleteListItemIcon   : _.template('<div class="icon <%= icon %>"></div>'),
-      mentionsOverlay            : _.template('<div class="mentions"><div></div></div>'),
-      mentionItemSyntax          : _.template('@[<%= value %>](<%= type %>:<%= id %>)'),
-      mentionItemHighlight       : _.template('<strong><span><%= value %></span></strong>')
+      wrapper                 : _.template('<div class="mentions-input-box"></div>'),
+      mentionsOverlay         : _.template('<div class="mentions"><div></div></div>'),
+      mentionItemSyntax       : _.template('@[<%= value %>](<%= type %>:<%= id %>)'),
+      mentionItemHighlight    : _.template('<strong><span><%= value %></span></strong>')
     }
   };
 
   var utils = {
-    highlightTerm    : function (value, term) {
-      if (!term && !term.length) {
-        return value;
-      }
-      return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
-    },
-
     setCaratPosition : function (domNode, caretPos) {
       if (domNode.createTextRange) {
         var range = domNode.createTextRange();
@@ -62,67 +49,127 @@
     }
   };
 
+
   var MentionsInput = function (settings) {
 
-    var domInput, elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
-    var mentionsCollection = [];
-    var autocompleteItemCollection = {};
-    var inputBuffer = [];
-    var currentDataQuery;
+    _.bindAll(this, 'onInputBoxKeyDown', 'onInputBoxKeyPress', 'onInputBoxInput', 'onInputBoxClick', 'onInputBoxBlur', 'resetBuffer', 'getMentions', 'val');
 
-    settings = $.extend(true, {}, defaultSettings, settings );
+    this.elmInputWrapper  = null;
+    this.elmWrapperBox  = null;
+    this.elmMentionsOverlay = null;
 
-    function initTextarea() {
-      elmInputBox = $(domInput);
+    this.autoCompleter = null;
+    this.mentionsCollection = [];
+    this.inputBuffer = [];
+    this.currentDataQuery = '';
 
-      if (elmInputBox.attr('data-mentions-input') == 'true') {
+
+    this.initialize.apply(this, arguments);
+  };
+
+  _.extend(MentionsInput.prototype, {
+
+    initialize : function(settings, domTarget) {
+
+      this.settings = $.extend(true, {}, defaultSettings, settings );
+
+      this.elmInputBox = $(domTarget);
+
+      this.initTextarea();
+      this.initMentionsOverlay();
+      this.initAutocomplete();
+
+      if( this.settings.resetOnInitialize ) {
+        this.resetInput();
+      }
+
+      if( this.settings.prefillMention ) {
+        this.addMention( this.settings.prefillMention );
+      }
+    },
+
+    initAutocomplete : function() {
+
+      if( !this.settings.autoCompleter ) {
+        this.settings.autoCompleter = $.fn.mentionsInput.defaultAutocompleterProxy;
+      }
+
+      this.autoCompleter = new this.settings.autoCompleter();
+      this.autoCompleter.initialize( this, this.elmWrapperBox );
+    },
+
+    initTextarea : function() {
+
+      if ( this.elmInputBox.attr('data-mentions-input') == 'true' ) {
         return;
       }
 
-      elmInputWrapper = elmInputBox.parent();
-      elmWrapperBox = $(settings.templates.wrapper());
-      elmInputBox.wrapAll(elmWrapperBox);
-      elmWrapperBox = elmInputWrapper.find('> div');
+      this.elmInputWrapper = this.elmInputBox.parent();
+      this.elmWrapperBox = $( this.settings.templates.wrapper() );
+      this.elmInputBox.wrapAll( this.elmWrapperBox );
+      this.elmWrapperBox = this.elmInputWrapper.find('> div');
 
-      elmInputBox.attr('data-mentions-input', 'true');
-      elmInputBox.bind('keydown', onInputBoxKeyDown);
-      elmInputBox.bind('keypress', onInputBoxKeyPress);
-      elmInputBox.bind('input', onInputBoxInput);
-      elmInputBox.bind('click', onInputBoxClick);
-      elmInputBox.bind('blur', onInputBoxBlur);
+      this.elmInputBox.attr('data-mentions-input', 'true');
+      this.elmInputBox.bind('keydown', this.onInputBoxKeyDown);
+      this.elmInputBox.bind('keypress', this.onInputBoxKeyPress);
+      this.elmInputBox.bind('input', this.onInputBoxInput);
+      this.elmInputBox.bind('click', this.onInputBoxClick);
+      this.elmInputBox.bind('blur', this.onInputBoxBlur);
 
       // Elastic textareas, internal setting for the Dispora guys
-      if( settings.elastic ) {
-        elmInputBox.elastic();
+      if( this.settings.elastic ) {
+        this.elmInputBox.elastic();
       }
+    },
 
-    }
+    initMentionsOverlay : function() {
+      this.elmMentionsOverlay = $( this.settings.templates.mentionsOverlay() );
+      this.elmMentionsOverlay.prependTo( this.elmWrapperBox );
+    },
 
-    function initAutocomplete() {
-      elmAutocompleteList = $(settings.templates.autocompleteList());
-      elmAutocompleteList.appendTo(elmWrapperBox);
-      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick);
-    }
+    _doSearch: function(query) {
+      var self = this;
 
-    function initMentionsOverlay() {
-      elmMentionsOverlay = $(settings.templates.mentionsOverlay());
-      elmMentionsOverlay.prependTo(elmWrapperBox);
-    }
+      if (query && query.length && query.length >= this.settings.minChars) {
+        this.autoCompleter.loading();
 
-    function updateValues() {
-      var syntaxMessage = getInputBoxValue();
+        this.settings.onDataRequest.call(this, 'search', query, function (responseData) {
 
-      _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax(mention);
+          // Filter items that has already been mentioned
+          var mentionValues = _.pluck(this.mentionsCollection, 'value');
+
+          responseData = _.reject(responseData, function (item) {
+            return _.include(mentionValues, item.name);
+          });
+
+          self.autoCompleter.populate(responseData, query);
+
+        });
+      } else {
+        this.autoCompleter.hide();
+      }
+    },
+
+    hideAutoComplete : function() {
+      this.autoCompleter.hide();
+    },
+
+    updateValues: function() {
+      var self = this;
+      var syntaxMessage = this.getInputBoxValue();
+
+      _.each(this.mentionsCollection, function (mention) {
+        var textSyntax = self.settings.templates.mentionItemSyntax(mention);
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = _.escape( syntaxMessage );
 
-      _.each(mentionsCollection, function (mention) {
+      _.each(this.mentionsCollection, function (mention) {
+
         var formattedMention = _.extend({}, mention, {value: _.escape( mention.value )});
-        var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
-        var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
+        var textSyntax = self.settings.templates.mentionItemSyntax(formattedMention);
+        var textHighlight = self.settings.templates.mentionItemHighlight(formattedMention);
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
@@ -130,29 +177,36 @@
       mentionText = mentionText.replace(/\n/g, '<br />');
       mentionText = mentionText.replace(/ {2}/g, '&nbsp; ');
 
-      elmInputBox.data('messageText', syntaxMessage);
-      elmMentionsOverlay.find('div').html(mentionText);
-    }
+      this.messageText = syntaxMessage;
+      this.elmMentionsOverlay.find('div').html(mentionText);
+    },
 
-    function resetBuffer() {
-      inputBuffer = [];
-    }
+    resetBuffer: function() {
+      this.inputBuffer = [];
+    },
 
-    function updateMentionsCollection() {
-      var inputText = getInputBoxValue();
+    resetInput: function() {
+      this.elmInputBox.val('');
+      this.mentionsCollection = [];
+      this.updateValues();
+    },
 
-      mentionsCollection = _.reject(mentionsCollection, function (mention, index) {
+    updateMentionsCollection: function() {
+      var inputText = this.getInputBoxValue();
+
+      this.mentionsCollection = _.reject(this.mentionsCollection, function (mention, index) {
         return !mention.value || inputText.indexOf(mention.value) == -1;
       });
-      mentionsCollection = _.compact(mentionsCollection);
-    }
 
-    function addMention(mention) {
+      this.mentionsCollection = _.compact(this.mentionsCollection);
+    },
 
-      var currentMessage = getInputBoxValue();
+    addMention: function(mention) {
+
+      var currentMessage = this.getInputBoxValue();
 
       // Using a regex to figure out positions
-      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
+      var regex = new RegExp("\\" + this.settings.triggerChar + currentDataQuery, "gi");
       regex.exec(currentMessage);
 
       var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
@@ -162,87 +216,80 @@
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
       var startEndIndex = (start + mention.value).length;
 
-      if(settings.insertSpaceAfterMention) {
+      if( this.settings.insertSpaceAfterMention ) {
         startEndIndex = startEndIndex + 1;
       }
 
-      mentionsCollection.push(mention);
+      this.mentionsCollection.push(mention);
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
-      resetBuffer();
-      currentDataQuery = '';
-      hideAutoComplete();
+      this.currentDataQuery = '';
+      this.resetBuffer();
+      this.hideAutoComplete();
 
       // Mentions & syntax message
       var updatedMessageText = start + mention.value;
-      if(settings.insertSpaceAfterMention) {
+      if( this.settings.insertSpaceAfterMention ) {
         updatedMessageText = updatedMessageText+ ' ';
       }
       updatedMessageText = updatedMessageText + end;
 
-      elmInputBox.val(updatedMessageText);
-      updateValues();
+      this.elmInputBox.val(updatedMessageText);
+      this.updateValues();
 
       // Set correct focus and selection
-      elmInputBox.focus();
-      utils.setCaratPosition(elmInputBox[0], startEndIndex);
-    }
+      this.elmInputBox.focus();
 
-    function getInputBoxValue() {
-      return $.trim(elmInputBox.val());
-    }
+      utils.setCaratPosition( this.elmInputBox[0], startEndIndex );
+    },
 
-    function onAutoCompleteItemClick(e) {
-      var elmTarget = $(this);
-      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
+    getInputBoxValue: function() {
+      return $.trim( this.elmInputBox.val() );
+    },
 
-      addMention(mention);
+    // Event handlers
+    onInputBoxClick: function(e) {
+      this.resetBuffer();
+    },
 
-      return false;
-    }
+    onInputBoxBlur: function(e) {
+      this.hideAutoComplete();
+    },
 
-    function onInputBoxClick(e) {
-      resetBuffer();
-    }
+    onInputBoxInput: function(e) {
+      this.updateValues();
+      this.updateMentionsCollection();
+      this.hideAutoComplete();
 
-    function onInputBoxBlur(e) {
-      hideAutoComplete();
-    }
+      var triggerCharIndex = _.lastIndexOf( this.inputBuffer, this.settings.triggerChar );
 
-    function onInputBoxInput(e) {
-
-      updateValues();
-      updateMentionsCollection();
-      hideAutoComplete();
-
-      var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
       if (triggerCharIndex === 0) {
-        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
+        currentDataQuery = this.inputBuffer.slice(triggerCharIndex + 1).join('');
         currentDataQuery = utils.rtrim(currentDataQuery);
 
-        _.defer(_.bind(doSearch, this, currentDataQuery));
+        _.defer(_.bind( this._doSearch , this, currentDataQuery));
       }
-    }
+    },
 
-    function onInputBoxKeyPress(e) {
+    onInputBoxKeyPress: function(e) {
       if(e.keyCode !== KEY.BACKSPACE) {
         var typedValue = String.fromCharCode(e.which || e.keyCode);
-        inputBuffer.push(typedValue);
+        this.inputBuffer.push(typedValue);
       }
-    }
+    },
 
-    function onInputBoxKeyDown(e) {
+    onInputBoxKeyDown: function(e) {
 
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
       if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END ) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
-        _.defer(resetBuffer);
+        _.defer( this.resetBuffer );
 
         // IE9 doesn't fire the oninput event when backspace or delete is pressed. This causes the highlighting
         // to stay on the screen whenever backspace is pressed after a highlighed word. This is simply a hack
         // to force updateValues() to fire when backspace/delete is pressed in IE9.
         if (navigator.userAgent.indexOf("MSIE 9") > -1) {
-          _.defer(updateValues);
+          _.defer( this.updateValues );
         }
 
         return;
@@ -251,174 +298,100 @@
       // Special handling for space, since we want to reset buffer on space, but only when autocompleter is hidden
       if ( e.keyCode == KEY.SPACE ) {
 
-        if ( elmAutocompleteList.is(':visible') ) {
+        if ( this.autoCompleter.isVisible() ) {
           // Allow spaces when autcompleter is visible
           return;
         }
 
-        _.defer(resetBuffer);
+        _.defer( this.resetBuffer );
 
         return;
       }
 
       if (e.keyCode == KEY.BACKSPACE) {
-        inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
+        this.inputBuffer = this.inputBuffer.slice(0, -1 + this.inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
 
-      if (!elmAutocompleteList.is(':visible')) {
-        return true;
-      }
+      if (e.keyCode == KEY.TAB) {
+        var autocompleteItem = this.autoCompleter.getSelectedItem();
 
-      switch (e.keyCode) {
-        case KEY.UP:
-        case KEY.DOWN:
-          var elmCurrentAutoCompleteItem = null;
-          if (e.keyCode == KEY.DOWN) {
-            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-              elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next();
-            } else {
-              elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first();
-            }
-          } else {
-            elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev();
-          }
-
-          if (elmCurrentAutoCompleteItem.length) {
-            selectAutoCompleteItem(elmCurrentAutoCompleteItem);
-          }
-
+        if(autocompleteItem) {
+          this.addMention( autocompleteItem );
           return false;
-
-        case KEY.RETURN:
-        case KEY.TAB:
-          if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-            elmActiveAutoCompleteItem.trigger('mousedown');
-            return false;
-          }
-
-          break;
+        }
       }
 
       return true;
-    }
+    },
 
-    function hideAutoComplete() {
-      elmActiveAutoCompleteItem = null;
-      elmAutocompleteList.empty().hide();
-    }
+    // External methods
+    val : function (callback) {
+      var value = this.mentionsCollection.length ? this.messageText : this.getInputBoxValue();
+      callback.call(this, value);
+    },
 
-    function selectAutoCompleteItem(elmItem) {
-      elmItem.addClass(settings.classes.autoCompleteItemActive);
-      elmItem.siblings().removeClass(settings.classes.autoCompleteItemActive);
+    reset : function () {
+      resetInput();
+    },
 
-      elmActiveAutoCompleteItem = elmItem;
-    }
-
-    function populateDropdown(query, results) {
-      elmAutocompleteList.show();
-
-      // Filter items that has already been mentioned
-      var mentionValues = _.pluck(mentionsCollection, 'value');
-      results = _.reject(results, function (item) {
-        return _.include(mentionValues, item.name);
-      });
-
-      if (!results.length) {
-        hideAutoComplete();
+    getMentions : function (callback) {
+      if (!_.isFunction(callback)) {
         return;
       }
 
-      elmAutocompleteList.empty();
-      var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
+      console.log(this);
 
-      _.each(results, function (item, index) {
-        var itemUid = _.uniqueId('mention_');
-
-        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
-
-        var elmListItem = $(settings.templates.autocompleteListItem({
-          'id'      : _.escape( item.id ),
-          'display' : _.escape( item.name ),
-          'type'    : _.escape( item.type ),
-          'content' : utils.highlightTerm(_.escape( item.name ), query)
-        })).attr('data-uid', itemUid);
-
-        if (index === 0) {
-          selectAutoCompleteItem(elmListItem);
-        }
-
-        if (settings.showAvatars) {
-          var elmIcon;
-
-          if (item.avatar) {
-            elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar : item.avatar }));
-          } else {
-            elmIcon = $(settings.templates.autocompleteListItemIcon({ icon : item.icon }));
-          }
-          elmIcon.prependTo(elmListItem);
-        }
-        elmListItem = elmListItem.appendTo(elmDropDownList);
-      });
-
-      elmAutocompleteList.show();
-      elmDropDownList.show();
+      callback.call(this, this.mentionsCollection);
     }
+  });
 
-    function doSearch(query) {
-      if (query && query.length && query.length >= settings.minChars) {
-        settings.onDataRequest.call(this, 'search', query, function (responseData) {
-          populateDropdown(query, responseData);
+  // AutocompleterProxy
+  var defaultAutocompleterProxy = function (settings) {
+
+    _.extend(defaultAutocompleterProxy.prototype, {
+
+      initialize: function initAutocomplete(mentionsInput, elmWrapperBox) {
+        var self = this;
+        this.autoCompleter = new SimpleAutoCompleter(elmWrapperBox, {});
+
+        this.autoCompleter.onItemSelected.progress(function(item) {
+          mentionsInput.addMention( self.format(item) );
         });
-      }
-    }
-
-    function resetInput() {
-      elmInputBox.val('');
-      mentionsCollection = [];
-      updateValues();
-    }
-
-    // Public methods
-    return {
-      init : function (domTarget) {
-
-        domInput = domTarget;
-
-        initTextarea();
-        initAutocomplete();
-        initMentionsOverlay();
-        resetInput();
-
-        if( settings.prefillMention ) {
-          addMention( settings.prefillMention );
-        }
-
       },
 
-      val : function (callback) {
-        if (!_.isFunction(callback)) {
-          return;
-        }
-
-        var value = mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue();
-        callback.call(this, value);
+      getSelectedItem: function() {
+        var item = this.autocompleter.getActiveItemData();
+        return this.format(item);
       },
 
-      reset : function () {
-        resetInput();
+      isVisible: function() {
+        return this.autoCompleter.isVisible();
       },
 
-      getMentions : function (callback) {
-        if (!_.isFunction(callback)) {
-          return;
-        }
+      hide: function() {
+        this.autoCompleter.hide();
+      },
 
-        callback.call(this, mentionsCollection);
-      }
-    };
+      format: function(item) {
+        return {
+          value:  item.name,
+          id:     item.id,
+          type:   item.type
+        };
+      },
+
+      populate: function() {
+        this.autoCompleter.populate.apply( this.autoCompleter, _.toArray(arguments) );
+      },
+
+      loading: $.noop
+
+   });
   };
 
+
+  // Exposing mentionsInput on jQuery-object
   $.fn.mentionsInput = function (method, settings) {
 
     var outerArguments = arguments;
@@ -428,19 +401,20 @@
     }
 
     return this.each(function () {
-      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(settings));
+      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(settings, this));
 
       if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
-
-      } else if (typeof method === 'object' || !method) {
-        return instance.init.call(this, this);
-
-      } else {
-        $.error('Method ' + method + ' does not exist');
       }
 
     });
   };
+
+  // Exposing defaultAutocompleterProxy on jQuery-object
+  $.fn.mentionsInput.defaultAutocompleterProxy = defaultAutocompleterProxy;
+
+  // Exposing defaultAutocompleterProxy on jQuery-object
+  $.fn.mentionsInput.defaultSettings = defaultSettings;
+
 
 })(jQuery, _);
