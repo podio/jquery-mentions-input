@@ -33,6 +33,7 @@
 .mentions-input-box .mentions > div {
   color:#ffffff;
   white-space:pre-wrap;
+  line-height: normal;
   width:100%;
 }
 .mentions-input-box .mentions > div > strong {
