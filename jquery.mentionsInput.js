@@ -94,16 +94,11 @@
 
     initTextarea : function() {
 
-      if ( this.elmInputBox.attr('data-mentions-input') == 'true' ) {
-        return;
-      }
-
       this.elmInputWrapper = this.elmInputBox.parent();
       this.elmWrapperBox = $( this.settings.templates.wrapper() );
       this.elmInputBox.wrapAll( this.elmWrapperBox );
       this.elmWrapperBox = this.elmInputWrapper.find('> div');
 
-      this.elmInputBox.attr('data-mentions-input', 'true');
       this.elmInputBox.bind('keydown', this.onInputBoxKeyDown);
       this.elmInputBox.bind('keypress', this.onInputBoxKeyPress);
       this.elmInputBox.bind('input', this.onInputBoxInput);
