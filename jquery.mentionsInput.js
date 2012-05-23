@@ -306,6 +306,10 @@
         _.defer( this.resetBuffer );
       }
 
+      if ( e.keyCode == KEY.RETURN ) {
+        _.defer( this.resetBuffer );
+      }
+
       if (e.keyCode == KEY.BACKSPACE) {
         this.inputBuffer = this.inputBuffer.slice(0, -1 + this.inputBuffer.length); // Can't use splice, not available in IE
         return;
