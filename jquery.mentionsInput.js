@@ -88,11 +88,6 @@
     },
 
     initAutocomplete : function() {
-
-      if( !this.settings.autoCompleter ) {
-        this.settings.autoCompleter = $.fn.mentionsInput.defaultAutocompleterProxy;
-      }
-
       this.autoCompleter = new this.settings.autoCompleter();
       this.autoCompleter.initialize( this, this.elmWrapperBox );
     },
@@ -398,6 +393,10 @@
 
     if (typeof method === 'object' || !method) {
       settings = method;
+    }
+
+    if( !settings.autoCompleter ) {
+      settings.autoCompleter = $.fn.mentionsInput.defaultAutocompleterProxy;
     }
 
     return this.each(function () {
