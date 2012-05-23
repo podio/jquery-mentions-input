@@ -99,11 +99,11 @@
       this.elmInputBox.wrapAll( this.elmWrapperBox );
       this.elmWrapperBox = this.elmInputWrapper.find('> div');
 
-      this.elmInputBox.bind('keydown', this.onInputBoxKeyDown);
-      this.elmInputBox.bind('keypress', this.onInputBoxKeyPress);
-      this.elmInputBox.bind('input', this.onInputBoxInput);
-      this.elmInputBox.bind('click', this.onInputBoxClick);
-      this.elmInputBox.bind('blur', this.onInputBoxBlur);
+      this.elmInputBox.bind('keydown.mentionsInput', this.onInputBoxKeyDown);
+      this.elmInputBox.bind('keypress.mentionsInput', this.onInputBoxKeyPress);
+      this.elmInputBox.bind('input.mentionsInput', this.onInputBoxInput);
+      this.elmInputBox.bind('click.mentionsInput', this.onInputBoxClick);
+      this.elmInputBox.bind('blur.mentionsInput', this.onInputBoxBlur);
 
       // Elastic textareas, internal setting for the Dispora guys
       if( this.settings.elastic ) {
