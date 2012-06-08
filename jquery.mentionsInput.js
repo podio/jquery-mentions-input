@@ -173,6 +173,7 @@
       // Mentions & syntax message
       var updatedMessageText = start + mention.value + ' ' + end;
       elmInputBox.val(updatedMessageText);
+      elmInputBox.trigger('mention');
       updateValues();
 
       // Set correct focus and selection
