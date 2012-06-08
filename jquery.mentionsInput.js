@@ -131,6 +131,7 @@
       mentionText = mentionText.replace(/ {2}/g, '&nbsp; ');
 
       elmInputBox.data('messageText', syntaxMessage);
+      elmInputBox.trigger('updated');
       elmMentionsOverlay.find('div').html(mentionText);
     }
 
