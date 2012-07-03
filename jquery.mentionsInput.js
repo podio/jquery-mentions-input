@@ -1,7 +1,9 @@
 /*
  * Mentions Input
  * Version 1.5
- * Written by: Kenneth Auchenberg (Citrix Systems Inc)
+ * Written by: Kenneth Auchenberg
+ *
+ * Copyright (c) 2012 - Citrix Systems, Inc.
  *
  * Using underscore.js
  *
@@ -112,8 +114,21 @@
     },
 
     initMentionsOverlay : function() {
-      this.elmMentionsOverlay = $( this.settings.templates.mentionsOverlay() );
-      this.elmMentionsOverlay.prependTo( this.elmWrapperBox );
+
+      // Contruct element
+      elmMentionsOverlay = $(settings.templates.mentionsOverlay());
+
+      // Copy CSS properties to inner <div>
+      var cssHash = {};
+      var cssProperties = ['lineHeight', 'fontSize', 'fontFamily', 'fontWeight'];
+      var i = cssProperties.length;
+      while (i--) {
+        cssHash[ cssProperties[i].toString() ] = elmInputBox.css( cssProperties[i].toString() );
+      }
+      elmMentionsOverlay.find('div').css( cssHash );
+
+      // Append to wrapper
+      elmMentionsOverlay.prependTo(elmWrapperBox);
     },
 
     _doSearch: function(query) {
