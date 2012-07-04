@@ -1,0 +1,29 @@
+{
+  "name": "jquery.mentionsInput",
+  "title": "jquery.mentionsInput",
+  "description": "jquery.mentionsInput is a small, but awesome UI component that allows you to '@mention' someone in a text message.",
+  "version": "1.5",
+  "homepage": "http://podio.github.com/jquery-mentions-input/",
+  "author": {
+    "name": "Kenneth Auchenberg (Citrix Systems Inc)",
+    "url": "http://podio.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/podio/jquery-mentions-input.git"
+  },
+  "bugs": {
+    "url": "https://github.com/podio/jquery-mentions-input/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/cowboy/grunt-jquery-example/blob/master/LICENSE-MIT"
+    }
+  ],
+  "dependencies": {
+    "jquery": "~1.5",
+    "underscorejs" : "~1.5"
+  },
+  "keywords": []
+}
