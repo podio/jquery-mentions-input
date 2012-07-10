@@ -68,7 +68,7 @@
     var mentionsCollection = [];
     var autocompleteItemCollection = {};
     var inputBuffer = [];
-    var currentDataQuery;
+    var currentDataQuery = '';
 
     settings = $.extend(true, {}, defaultSettings, settings );
 
