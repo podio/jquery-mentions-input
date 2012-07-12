@@ -1,6 +1,6 @@
 /*
  * Mentions Input
- * Version 1.0.1
+ * Version 1.0.2
  * Written by: Kenneth Auchenberg (Podio)
  *
  * Using underscore.js
@@ -18,6 +18,7 @@
     onDataRequest   : $.noop,
     minChars        : 2,
     showAvatars     : true,
+    elastic       : true,
     classes         : {
       autoCompleteItemActive : "active"
     },
@@ -104,16 +105,19 @@
     }
   };
 
-  var MentionsInput = function (input) {
-    var settings;
-    var elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
+  var MentionsInput = function (settings) {
+
+    var domInput, elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
     var mentionsCollection = [];
+    var autocompleteItemCollection = {};
     var inputBuffer = [];
     var currentDataQuery;
     var cursorEndPosition;
 
+    settings = $.extend(true, {}, defaultSettings, settings );
+
     function initTextarea() {
-      elmInputBox = $(input);
+      elmInputBox = $(domInput);
 
       if (elmInputBox.attr('data-mentions-input') == 'true') {
         return;
@@ -129,18 +133,22 @@
       elmInputBox.bind('keypress', onInputBoxKeyPress);
       elmInputBox.bind('input', onInputBoxInput);
       elmInputBox.bind('click', onInputBoxClick);
+      elmInputBox.bind('blur', onInputBoxBlur);
+
+      // Elastic textareas, internal setting for the Dispora guys
+      if( settings.elastic ) {
+        elmInputBox.elastic();
+      }
 
       if (settings.fullNameTrigger) {
         elmInputBox.bind('keyup mousedown mouseup focus', saveCursorPosition);
       }
-
-      elmInputBox.elastic();
     }
 
     function initAutocomplete() {
       elmAutocompleteList = $(settings.templates.autocompleteList());
       elmAutocompleteList.appendTo(elmWrapperBox);
-      elmAutocompleteList.delegate('li', 'click', onAutoCompleteItemClick);
+      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick);
     }
 
     function initMentionsOverlay() {
@@ -156,15 +164,16 @@
       var syntaxMessage = getInputBoxValue();
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : mention.value, type : mention.type, id : mention.id });
+        var textSyntax = settings.templates.mentionItemSyntax(mention);
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage);
 
       _.each(mentionsCollection, function (mention) {
-        var textSyntax = settings.templates.mentionItemSyntax({ value : utils.htmlEncode(mention.value), type : mention.type, id : mention.id });
-        var textHighlight = settings.templates.mentionItemHighlight({ value : utils.htmlEncode(mention.value) });
+        var formattedMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
+        var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
+        var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
 
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
@@ -189,7 +198,8 @@
       mentionsCollection = _.compact(mentionsCollection);
     }
 
-    function addMention(value, id, type) {
+    function addMention(mention) {
+
       var currentMessage = getInputBoxValue();
 
       if (settings.fullNameTrigger) {
@@ -215,15 +225,9 @@
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
-      var startEndIndex = (start + value).length;
+      var startEndIndex = (start + mention.value).length + 1;
 
-      var updatedMessageText = start + value + end;
-
-      mentionsCollection.push({
-        id    : id,
-        type  : type,
-        value : value
-      });
+      mentionsCollection.push(mention);
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
@@ -231,6 +235,7 @@
       hideAutoComplete();
 
       // Mentions & syntax message
+      var updatedMessageText = start + mention.value + ' ' + end;
       elmInputBox.val(updatedMessageText);
       updateValues();
 
@@ -245,14 +250,19 @@
 
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
+      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
 
-      addMention(elmTarget.attr('data-display'), elmTarget.attr('data-ref-id'), elmTarget.attr('data-ref-type'));
+      addMention(mention);
 
       return false;
     }
 
     function onInputBoxClick(e) {
       resetBuffer();
+    }
+
+    function onInputBoxBlur(e) {
+      hideAutoComplete();
     }
 
     function onInputBoxInput(e) {
@@ -278,8 +288,10 @@
     }
 
     function onInputBoxKeyPress(e) {
-      var typedValue = String.fromCharCode(e.which || e.keyCode);
-      inputBuffer.push(typedValue);
+      if(e.keyCode !== KEY.BACKSPACE) {
+        var typedValue = String.fromCharCode(e.which || e.keyCode);
+        inputBuffer.push(typedValue);
+      }
     }
 
     function onInputBoxKeyDown(e) {
@@ -294,6 +306,7 @@
         if (navigator.userAgent.indexOf("MSIE 9") > -1) {
           _.defer(updateValues);
         }
+
         return;
       }
 
@@ -329,7 +342,7 @@
         case KEY.RETURN:
         case KEY.TAB:
           if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-            elmActiveAutoCompleteItem.click();
+            elmActiveAutoCompleteItem.trigger('mousedown');
             return false;
           }
 
@@ -369,13 +382,17 @@
       var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
 
       _.each(results, function (item, index) {
+        var itemUid = _.uniqueId('mention_');
+
+        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
+
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query),
           'item'    : item
-        }));
+        })).attr('data-uid', itemUid);
 
         if (index === 0) {
           selectAutoCompleteItem(elmListItem);
@@ -425,14 +442,27 @@
       }
     }
 
+    function resetInput() {
+      elmInputBox.val('');
+      mentionsCollection = [];
+      updateValues();
+    }
+
     // Public methods
     return {
-      init : function (options) {
-        settings = options;
+      init : function (domTarget) {
+
+        domInput = domTarget;
 
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
+        resetInput();
+
+        if( settings.prefillMention ) {
+          addMention( settings.prefillMention );
+        }
+
       },
 
       val : function (callback) {
@@ -445,9 +475,7 @@
       },
 
       reset : function () {
-        elmInputBox.val('');
-        mentionsCollection = [];
-        updateValues();
+        resetInput();
       },
 
       getMentions : function (callback) {
@@ -461,20 +489,20 @@
   };
 
   $.fn.mentionsInput = function (method, settings) {
-    if (typeof method === 'object' || !method) {
-      settings = $.extend(true, {}, defaultSettings, method);
-    }
-
     var outerArguments = arguments;
 
+    if (typeof method === 'object' || !method) {
+      settings = method;
+    }
+
     return this.each(function () {
-      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(this));
+      var instance = $.data(this, 'mentionsInput') || $.data(this, 'mentionsInput', new MentionsInput(settings));
 
       if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
 
       } else if (typeof method === 'object' || !method) {
-        return instance.init.call(this, settings);
+        return instance.init.call(this, this);
 
       } else {
         $.error('Method ' + method + ' does not exist');
