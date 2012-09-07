@@ -10,27 +10,6 @@
 
 (function ($, _, undefined) {
 
-  // This is taken straight from live (as of Sep 2012) GitHub code. The
-  // technique is known around the web. Just google it. Github's is quite
-  // succint though.
-  $.fn.textareaSelectionPosition = function () {
-    var a, b, c, d, e, f, g, h, i, j, k;
-    if (!(i = this[0])) return;
-    if (!$(i).is("textarea")) return;
-    if (i.selectionEnd == null) return;
-    g = {
-      position: "absolute",
-      overflow: "auto",
-      whiteSpace: "pre-wrap",
-      wordWrap: "break-word",
-      boxSizing: "content-box",
-      top: 0,
-      left: -9999
-    }, h = ["boxSizing", "fontFamily", "fontSize", "fontStyle", "fontVariant", "fontWeight", "height", "letterSpacing", "lineHeight", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "textDecoration", "textIndent", "textTransform", "width", "word-spacing"];
-    for (j = 0, k = h.length; j < k; j++) e = h[j], g[e] = $(i).css(e);
-    return c = document.createElement("div"), $(c).css(g), $(i).after(c), b = document.createTextNode(i.value.substring(0, i.selectionEnd)), a = document.createTextNode(i.value.substring(i.selectionEnd)), d = document.createElement("span"), d.innerHTML = "&nbsp;", c.appendChild(b), c.appendChild(d), c.appendChild(a), c.scrollTop = i.scrollTop, f = $(d).position(), $(c).remove(), f
-  }
-
   // Settings
   var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
   var defaultSettings = {
@@ -205,6 +184,27 @@
       return $.trim(elmInputBox.val());
     }
 
+    // This is taken straight from live (as of Sep 2012) GitHub code. The
+    // technique is known around the web. Just google it. Github's is quite
+    // succint though.
+    function textareaSelectionPosition($el) {
+      var a, b, c, d, e, f, g, h, i, j, k;
+      if (!(i = $el[0])) return;
+      if (!$(i).is("textarea")) return;
+      if (i.selectionEnd == null) return;
+      g = {
+        position: "absolute",
+        overflow: "auto",
+        whiteSpace: "pre-wrap",
+        wordWrap: "break-word",
+        boxSizing: "content-box",
+        top: 0,
+        left: -9999
+      }, h = ["boxSizing", "fontFamily", "fontSize", "fontStyle", "fontVariant", "fontWeight", "height", "letterSpacing", "lineHeight", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "textDecoration", "textIndent", "textTransform", "width", "word-spacing"];
+      for (j = 0, k = h.length; j < k; j++) e = h[j], g[e] = $(i).css(e);
+      return c = document.createElement("div"), $(c).css(g), $(i).after(c), b = document.createTextNode(i.value.substring(0, i.selectionEnd)), a = document.createTextNode(i.value.substring(i.selectionEnd)), d = document.createElement("span"), d.innerHTML = "&nbsp;", c.appendChild(b), c.appendChild(d), c.appendChild(a), c.scrollTop = i.scrollTop, f = $(d).position(), $(c).remove(), f
+    }    
+
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
       var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
@@ -374,7 +374,7 @@
     }
 
     function positionAutocomplete(elmAutocompleteList, elmInputBox) {
-      var position = elmInputBox.textareaSelectionPosition(),
+      var position = textareaSelectionPosition(elmInputBox),
           lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
       elmAutocompleteList.css('width', '12em'); // Sort of a guess
       elmAutocompleteList.css('left', position.left);
