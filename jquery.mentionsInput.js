@@ -18,6 +18,7 @@
     minChars      : 2,
     showAvatars   : true,
     elastic       : true,
+    parseValue    : function(item) { return item.name; }
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -312,7 +313,7 @@
       _.each(results, function (item, index) {
         var itemUid = _.uniqueId('mention_');
 
-        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
+        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: settings.parseValue(item)});
 
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
