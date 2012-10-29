@@ -58,6 +58,21 @@
         }
       }
     },
+    getCaratPosition: function (domNode) {
+      if (domNode.selectionStart) {
+        return domNode.selectionStart;
+      }
+      else if (domNode.ownerDocument.selection) {
+        var range = domNode.ownerDocument.selection.createRange();
+        if(!range) return 0;
+        var textrange = domNode.createTextRange();
+        var textrange2 = textrange.duplicate();
+
+        textrange.moveToBookmark(range.getBookmark());
+        textrange2.setEndPoint('EndToStart', textrange);
+        return textrange2.text.length;
+      }
+    },
     rtrim: function(string) {
       return string.replace(/\s+$/,"");
     }
@@ -149,18 +164,14 @@
     }
 
     function addMention(mention) {
-
       var currentMessage = getInputBoxValue();
 
-      // Using a regex to figure out positions
-      var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
-      regex.exec(currentMessage);
+      var currentCaratPosition = utils.getCaratPosition(elmInputBox[0]);
+      var startMentionPosition = currentMessage.substr(0, currentCaratPosition).lastIndexOf(settings.triggerChar);
+      var endMentionPosition = startMentionPosition + currentDataQuery.length;
 
-      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
-      var currentCaretPosition = regex.lastIndex;
-
-      var start = currentMessage.substr(0, startCaretPosition);
-      var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
+      var start = currentMessage.substr(0, startMentionPosition);
+      var end = currentMessage.substr(endMentionPosition + 1, currentMessage.length);
       var startEndIndex = (start + mention.value).length + 1;
 
       mentionsCollection.push(mention);
