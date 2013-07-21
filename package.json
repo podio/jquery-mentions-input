@@ -1,0 +1,30 @@
+{
+  "name": "MentionsInput",
+  "description": "small, but awesome UI component that allows you to '@mention' someone in a text message.",
+  "keywords": [
+    "typeahead",
+    "autocomplete",
+    "mentionsinput",
+    "atmention",
+    "mention"
+  ],
+  "author": {
+    "name": "Kenneth Auchenberg",
+    "url": "https://twitter.com/auchenberg"
+  },
+  "devDependencies": {
+    "grunt": "~0.4",
+    "grunt-sed": "~0.1",
+    "grunt-exec": "~0.4",
+    "grunt-contrib-sass": "~0.4.1",
+    "grunt-contrib-jshint": "~0.1",
+    "grunt-contrib-concat": "~0.1",
+    "semver": "~1.1.3",
+    "grunt-parallel": "0.0.2"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "private": true,
+  "version": "2.0.0"
+}
