@@ -1,9 +1,10 @@
 module.exports = function(grunt) {
+  'use strict';
 
   grunt.initConfig({
-    sass: {                              // Task
-      dist: {                            // Target
-        options: {                       // Target options
+    sass: {
+      dist: {
+        options: {
           style: 'expanded'
         },
         files: {
@@ -15,7 +16,6 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-sass');
-
   grunt.registerTask('default', ['sass']);
 
 };
