@@ -1,0 +1,52 @@
+.mentions-input-box {
+  position: relative;
+  background: #fff;
+
+  > textarea {
+    width: 100%;
+    display: block;
+    height: 18px;
+    padding: 9px;
+    border: 1px solid #dcdcdc;
+    border-radius: 3px;
+    overflow: hidden;
+    background: transparent;
+    position: relative;
+    outline: 0;
+    resize: none;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+
+  > .mentions {
+    position: absolute;
+    left: 1px;
+    right: 0;
+    top: 1px;
+    bottom: 0;
+    padding: 9px;
+    color: #fff;
+    overflow: hidden;
+
+    white-space: pre-wrap;
+    word-wrap: break-word;
+
+    > div {
+      color: #fff;
+      white-space: pre-wrap;
+      width: 100%;
+
+      > strong {
+        font-weight: normal;
+        background: #d8dfea;
+
+        > span {
+          filter: progid:DXImageTransform.Microsoft.Alpha(opacity = 0);
+        }
+      }
+    }
+  }
+
+}
