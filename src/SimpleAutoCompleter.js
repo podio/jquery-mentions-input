@@ -93,7 +93,7 @@
         var itemsCollection = this.currentItemsCollections;
 
         var itemData = _.find(itemsCollection, function(item) {
-          return item.id == itemId;
+          return item.id === itemId;
         });
 
         return itemData;
@@ -123,7 +123,7 @@
           case KEY.DownArrow:
           case KEY.UpArrow:
 
-            if (e.keyCode == KEY.DownArrow) {
+            if (e.keyCode === KEY.DownArrow) {
               elmActiveItem = elmActiveItem.length ? elmActiveItem.next('.' + this.options.classes.item) : this.elmAutocompleteList.find('.' + this.options.classes.item).first();
             } else {
               elmActiveItem = elmActiveItem.prev('.' + this.options.classes.item);

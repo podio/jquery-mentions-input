@@ -245,7 +245,7 @@
       var inputText = this.getInputBoxValue();
 
       this.mentionsCollection = _.reject(this.mentionsCollection, function (mention) {
-        return !mention.value || inputText.indexOf(mention.value) == -1;
+        return !mention.value || inputText.indexOf(mention.value) === -1;
       });
 
       this.mentionsCollection = _.compact(this.mentionsCollection);
@@ -340,7 +340,7 @@
     onInputBoxKeyDown: function(e) {
 
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
-      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END ) {
+      if (e.keyCode === KEY.LEFT || e.keyCode === KEY.RIGHT || e.keyCode === KEY.HOME || e.keyCode === KEY.END ) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
         _.defer(this.resetBuffer);
 
@@ -355,7 +355,7 @@
       }
 
       // Special handling for space, since we want to reset buffer on space, but only when autocompleter is hidden
-      if (e.keyCode == KEY.SPACE) {
+      if (e.keyCode === KEY.SPACE) {
 
         if (this._autoCompleterMethod('isVisible')) {
           // Allow spaces when autcompleter is visible
@@ -365,11 +365,11 @@
         _.defer(this.resetBuffer);
       }
 
-      if (e.keyCode == KEY.RETURN) {
+      if (e.keyCode === KEY.RETURN) {
         _.defer(this.resetBuffer);
       }
 
-      if (e.keyCode == KEY.BACKSPACE) {
+      if (e.keyCode === KEY.BACKSPACE) {
         this.inputBuffer = this.inputBuffer.slice(0, -1 + this.inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
