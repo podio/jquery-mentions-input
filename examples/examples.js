@@ -1,5 +1,4 @@
 (function ($, _, MentionsInput) {
-
   'use strict';
 
   var mentionsInput = new MentionsInput($('textarea.mention'), {
