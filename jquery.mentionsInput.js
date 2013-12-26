@@ -81,8 +81,7 @@
 
       elmInputWrapper = elmInputBox.parent();
       elmWrapperBox = $(settings.templates.wrapper());
-      elmInputBox.wrapAll(elmWrapperBox);
-      elmWrapperBox = elmInputWrapper.find('> div');
+      elmWrapperBox.insertBefore(elmInputBox).append(elmInputBox);
 
       elmInputBox.attr('data-mentions-input', 'true');
       elmInputBox.bind('keydown', onInputBoxKeyDown);
