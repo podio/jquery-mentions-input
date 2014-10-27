@@ -75,7 +75,7 @@
     function initTextarea() {
       elmInputBox = $(domInput);
 
-      if (elmInputBox.attr('data-mentions-input') == 'true') {
+      if (elmInputBox.attr('data-mentions-input') === 'true') {
         return;
       }
 
@@ -223,7 +223,7 @@
     function onInputBoxKeyDown(e) {
 
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
-      if (e.keyCode == KEY.LEFT || e.keyCode == KEY.RIGHT || e.keyCode == KEY.HOME || e.keyCode == KEY.END) {
+      if (e.keyCode === KEY.LEFT || e.keyCode === KEY.RIGHT || e.keyCode === KEY.HOME || e.keyCode === KEY.END) {
         // Defer execution to ensure carat pos has changed after HOME/END keys
         _.defer(resetBuffer);
 
@@ -237,7 +237,7 @@
         return;
       }
 
-      if (e.keyCode == KEY.BACKSPACE) {
+      if (e.keyCode === KEY.BACKSPACE) {
         inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
@@ -250,7 +250,7 @@
         case KEY.UP:
         case KEY.DOWN:
           var elmCurrentAutoCompleteItem = null;
-          if (e.keyCode == KEY.DOWN) {
+          if (e.keyCode === KEY.DOWN) {
             if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
               elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next();
             } else {
