@@ -44,7 +44,6 @@ Your feedback is very appreciated!
 ## Roadmap
 - Fix open issues.
 - Seperate mentionsInput from jQuery, and expose as AMD/CJS module.
-- Package component up for bower and components.
 - Seperate autocompleter, so it's possible to use bootstrap, jquery, etc-autocompleters
 - Define better interface to call methods.
 - Add the option to have a hidden-input that contains the syntaxed-version, so it's easier to use out of the box.
