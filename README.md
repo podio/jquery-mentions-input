@@ -11,6 +11,28 @@ To get started -- checkout http://podio.github.com/jquery-mentions-input
 
 1.5.0 (2012-7-7) -- https://github.com/podio/jquery-mentions-input/tree/1.5
 
+## License
+
+MIT License - http://www.opensource.org/licenses/mit-license.php
+
+## Dependencies
+
+jquery.mentionsInput is written as a jQuery extension, so it naturally requires jQuery (1.6+). In addition to jQuery, it also depends on underscore.js (1.2+), which is used to simplify stuff a bit.
+
+The component is also using the new HTML5 "input" event. This means older browsers like IE8 need a polyfill which emulates the event (it is bundled).
+
+The component itself is implemented as a small independent function, so it can easily be ported to frameworks other than jQuery.
+
+Furthermore all utility functions have been centralized in the utils-object, which can be replaced with references if you already got functions like htmlEncode, etc.
+
+To make the component grow and shrink to fit it’s content, you can include jquery.elastic.js
+
+## Browser support
+
+jquery.mentionsInput has been tested in Firefox 6+, Chrome 15+, and Internet Explorer 8+.
+
+Please let us know if you see anything weird. And no, we will no make it work for older browsers. Period.
+
 ## Reporting issues
 
 Please provide jsFiddle when creating issues!
