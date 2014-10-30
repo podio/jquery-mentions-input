@@ -18,6 +18,7 @@
     minChars      : 2,
     showAvatars   : true,
     elastic       : true,
+    onCaret       : false,
     classes       : {
       autoCompleteItemActive : "active"
     },
@@ -183,6 +184,29 @@
       return $.trim(elmInputBox.val());
     }
 
+    // This is taken straight from live (as of Sep 2012) GitHub code. The
+    // technique is known around the web. Just google it. Github's is quite
+    // succint though. NOTE: relies on selectionEnd, which as far as IE is concerned,
+    // it'll only work on 9+. Good news is nothing will happen if the browser
+    // doesn't support it.
+    function textareaSelectionPosition($el) {
+      var a, b, c, d, e, f, g, h, i, j, k;
+      if (!(i = $el[0])) return;
+      if (!$(i).is("textarea")) return;
+      if (i.selectionEnd == null) return;
+      g = {
+        position: "absolute",
+        overflow: "auto",
+        whiteSpace: "pre-wrap",
+        wordWrap: "break-word",
+        boxSizing: "content-box",
+        top: 0,
+        left: -9999
+      }, h = ["boxSizing", "fontFamily", "fontSize", "fontStyle", "fontVariant", "fontWeight", "height", "letterSpacing", "lineHeight", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "textDecoration", "textIndent", "textTransform", "width", "word-spacing"];
+      for (j = 0, k = h.length; j < k; j++) e = h[j], g[e] = $(i).css(e);
+      return c = document.createElement("div"), $(c).css(g), $(i).after(c), b = document.createTextNode(i.value.substring(0, i.selectionEnd)), a = document.createTextNode(i.value.substring(i.selectionEnd)), d = document.createElement("span"), d.innerHTML = "&nbsp;", c.appendChild(b), c.appendChild(d), c.appendChild(a), c.scrollTop = i.scrollTop, f = $(d).position(), $(c).remove(), f
+    }
+
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this);
       var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
@@ -317,7 +341,7 @@
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
-          'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
+          'content' : utils.highlightTerm(utils.htmlEncode((item.display ? item.display : item.name)), query)
         })).attr('data-uid', itemUid);
 
         if (index === 0) {
@@ -338,6 +362,7 @@
       });
 
       elmAutocompleteList.show();
+      if (settings.onCaret) positionAutocomplete(elmAutocompleteList, elmInputBox);
       elmDropDownList.show();
     }
 
@@ -349,6 +374,14 @@
       } else {
         hideAutoComplete();
       }
+    }
+
+    function positionAutocomplete(elmAutocompleteList, elmInputBox) {
+      var position = textareaSelectionPosition(elmInputBox),
+          lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
+      elmAutocompleteList.css('width', '15em'); // Sort of a guess
+      elmAutocompleteList.css('left', position.left);
+      elmAutocompleteList.css('top', lineHeight + position.top);
     }
 
     function resetInput() {
