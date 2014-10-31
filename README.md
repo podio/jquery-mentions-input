@@ -11,6 +11,12 @@ To get started -- checkout http://podio.github.com/jquery-mentions-input
 
 1.5.0 (2012-7-7) -- https://github.com/podio/jquery-mentions-input/tree/1.5
 
+## Bugs and Enhancements (next version)
+
+- [] Fix #74 Mention on ordinary input field not textarea
+- [] Fix #26 Capital letter as trigger character
+- [] Fix #59 Unicode characters supports
+
 ## License
 
 MIT License - http://www.opensource.org/licenses/mit-license.php
