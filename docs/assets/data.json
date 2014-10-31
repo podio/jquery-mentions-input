@@ -40,5 +40,11 @@
         "name": "kenneth@auchenberg.dk",
         "avatar": "http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif",
         "type": "contact"
-    }
+    },
+	{
+		"id": 8,
+		"name": "Dennis Hernandez",
+		"avatar": "http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif",
+        "type": "contact"
+	}
 ]
