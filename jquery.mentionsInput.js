@@ -78,6 +78,10 @@
       if (elmInputBox.attr('data-mentions-input') === 'true') {
         return;
       }
+	  
+	  if (elmInputBox.is('input')) {
+			elmInputBox.css('width', '100%');
+		}
 
       elmInputWrapper = elmInputBox.parent();
       elmWrapperBox = $(settings.templates.wrapper());
