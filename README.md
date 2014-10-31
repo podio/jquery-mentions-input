@@ -54,5 +54,4 @@ Your feedback is very appreciated!
 - Define better interface to call methods.
 - Add the option to have a hidden-input that contains the syntaxed-version, so it's easier to use out of the box.
 - Add unit tests!
-- Add Changelog
 - Add mobile support
