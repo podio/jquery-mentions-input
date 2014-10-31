@@ -67,7 +67,7 @@
     rtrim: function(string) {
       return string.replace(/\s+$/,"");
     }
-  }
+  };
 
   //Main class of MentionsInput plugin
   var MentionsInput = function (settings) {
@@ -106,14 +106,14 @@
       if( settings.elastic ) {
         elmInputBox.elastic();
       }
-    };
+    }
 
 	//Initializes the autocomplete list, append to elmWrapperBox and delegate the mousedown event to li elements
     function initAutocomplete() {
       elmAutocompleteList = $(settings.templates.autocompleteList()); //Get the HTML code for the list
       elmAutocompleteList.appendTo(elmWrapperBox); //Append to elmWrapperBox element
       elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick); //Delegate the event
-    };
+    }
 
 	//Initializes the mentions' overlay
     function initMentionsOverlay() {
