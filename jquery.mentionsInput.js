@@ -12,14 +12,16 @@
 
   // Settings
   var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
+  
+  //Default settings
   var defaultSettings = {
-    triggerChar   : '@',
-    onDataRequest : $.noop,
-    minChars      : 2,
-    showAvatars   : true,
-    elastic       : true,
-    classes       : {
-      autoCompleteItemActive : "active"
+    triggerChar   : '@', //Char that respond to event
+    onDataRequest : $.noop, //Function where we can search the data
+    minChars      : 2, //Minimum chars to fire the event
+    showAvatars   : true, //Show the avatars
+    elastic       : true, //Grow the textarea automatically
+    classes       : { 
+      autoCompleteItemActive : "active" //Classes to apply in each item
     },
     templates     : {
       wrapper                    : _.template('<div class="mentions-input-box"></div>'),
@@ -33,16 +35,20 @@
     }
   };
 
+  //Class util
   var utils = {
+	//Encodes the character with _.escape function (undersocre)
     htmlEncode       : function (str) {
       return _.escape(str);
     },
+	//
     highlightTerm    : function (value, term) {
       if (!term && !term.length) {
         return value;
       }
       return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
     },
+	//Sets the caret in a valid position
     setCaratPosition : function (domNode, caretPos) {
       if (domNode.createTextRange) {
         var range = domNode.createTextRange();
@@ -57,11 +63,13 @@
         }
       }
     },
+	//Deletes the white spaces
     rtrim: function(string) {
       return string.replace(/\s+$/,"");
     }
   };
 
+  //Main class of MentionsInput plugin
   var MentionsInput = function (settings) {
 
     var domInput, elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
@@ -70,54 +78,59 @@
     var inputBuffer = [];
     var currentDataQuery;
 
+	//Mix the default setting with the users settings
     settings = $.extend(true, {}, defaultSettings, settings );
 
+	//Initializes the text area target
     function initTextarea() {
-      elmInputBox = $(domInput);
+      elmInputBox = $(domInput); //Get the text area target
 
+	  //If the text area is already configured, return
       if (elmInputBox.attr('data-mentions-input') === 'true') {
         return;
       }
 
-      elmInputWrapper = elmInputBox.parent();
-      elmWrapperBox = $(settings.templates.wrapper());
-      elmInputBox.wrapAll(elmWrapperBox);
-      elmWrapperBox = elmInputWrapper.find('> div.mentions-input-box');
+      elmInputWrapper = elmInputBox.parent(); //Get the DOM element parent
+      elmWrapperBox = $(settings.templates.wrapper()); 
+      elmInputBox.wrapAll(elmWrapperBox); //Wrap all the text area into the div elmWrapperBox
+      elmWrapperBox = elmInputWrapper.find('> div.mentions-input-box'); //Obtains the div elmWrapperBox that now contains the text area
 
-      elmInputBox.attr('data-mentions-input', 'true');
-      elmInputBox.bind('keydown', onInputBoxKeyDown);
-      elmInputBox.bind('keypress', onInputBoxKeyPress);
-      elmInputBox.bind('input', onInputBoxInput);
-      elmInputBox.bind('click', onInputBoxClick);
-      elmInputBox.bind('blur', onInputBoxBlur);
+      elmInputBox.attr('data-mentions-input', 'true'); //Sets the attribute data-mentions-input to true -> Defines if the text area is already configured
+      elmInputBox.bind('keydown', onInputBoxKeyDown); //Bind the keydown event to the text area
+      elmInputBox.bind('keypress', onInputBoxKeyPress); //Bind the keypress event to the text area
+      elmInputBox.bind('input', onInputBoxInput); //Bind the input event to the text area
+      elmInputBox.bind('click', onInputBoxClick); //Bind the click event to the text area
+      elmInputBox.bind('blur', onInputBoxBlur); //Bind the blur event to the text area
 
-      // Elastic textareas, internal setting for the Dispora guys
+      // Elastic textareas, grow automatically
       if( settings.elastic ) {
         elmInputBox.elastic();
       }
-
     }
 
+	//Initializes the autocomplete list, append to elmWrapperBox and delegate the mousedown event to li elements
     function initAutocomplete() {
-      elmAutocompleteList = $(settings.templates.autocompleteList());
-      elmAutocompleteList.appendTo(elmWrapperBox);
-      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick);
+      elmAutocompleteList = $(settings.templates.autocompleteList()); //Get the HTML code for the list
+      elmAutocompleteList.appendTo(elmWrapperBox); //Append to elmWrapperBox element
+      elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick); //Delegate the event
     }
 
+	//Initializes the mentions' overlay
     function initMentionsOverlay() {
-      elmMentionsOverlay = $(settings.templates.mentionsOverlay());
-      elmMentionsOverlay.prependTo(elmWrapperBox);
+      elmMentionsOverlay = $(settings.templates.mentionsOverlay()); //Get the HTML code of the mentions' overlay
+      elmMentionsOverlay.prependTo(elmWrapperBox); //Insert into elmWrapperBox the mentions overlay
     }
 
+	//Updates the values of the main variables
     function updateValues() {
-      var syntaxMessage = getInputBoxValue();
+      var syntaxMessage = getInputBoxValue(); //Get the actual value of the text area
 
       _.each(mentionsCollection, function (mention) {
         var textSyntax = settings.templates.mentionItemSyntax(mention);
         syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
       });
 
-      var mentionText = utils.htmlEncode(syntaxMessage);
+      var mentionText = utils.htmlEncode(syntaxMessage); //Encode the syntaxMessage
 
       _.each(mentionsCollection, function (mention) {
         var formattedMention = _.extend({}, mention, {value: utils.htmlEncode(mention.value)});
@@ -127,51 +140,55 @@
         mentionText = mentionText.replace(textSyntax, textHighlight);
       });
 
-      mentionText = mentionText.replace(/\n/g, '<br />');
-      mentionText = mentionText.replace(/ {2}/g, '&nbsp; ');
+      mentionText = mentionText.replace(/\n/g, '<br />'); //Replace the escape character for <br />
+      mentionText = mentionText.replace(/ {2}/g, '&nbsp; '); //Replace the 2 preceding token to &nbsp; 
 
-      elmInputBox.data('messageText', syntaxMessage);
-      elmMentionsOverlay.find('div').html(mentionText);
+      elmInputBox.data('messageText', syntaxMessage); //Save the messageText to elmInputBox
+      elmMentionsOverlay.find('div').html(mentionText); //Insert into a div of the elmMentionsOverlay the mention text
     }
 
+	//Cleans the buffer
     function resetBuffer() {
       inputBuffer = [];
     }
 
+	//Updates the mentions collection
     function updateMentionsCollection() {
-      var inputText = getInputBoxValue();
+      var inputText = getInputBoxValue(); //Get the actual value of text area
 
+	  //Returns the values that doesn't match the condition
       mentionsCollection = _.reject(mentionsCollection, function (mention, index) {
         return !mention.value || inputText.indexOf(mention.value) == -1;
       });
-      mentionsCollection = _.compact(mentionsCollection);
+      mentionsCollection = _.compact(mentionsCollection); //Delete all the falsy values of the array and return the new array
     }
 
+	//Adds mention to mentions collections
     function addMention(mention) {
 
-      var currentMessage = getInputBoxValue();
+      var currentMessage = getInputBoxValue(); //Get the actual value of the text area
 
       // Using a regex to figure out positions
       var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
-      regex.exec(currentMessage);
+      regex.exec(currentMessage); //Executes a search for a match in a specified string. Returns a result array, or null
 
-      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1;
-      var currentCaretPosition = regex.lastIndex;
+      var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1; //Set the star caret position
+      var currentCaretPosition = regex.lastIndex; //Set the current caret position
 
       var start = currentMessage.substr(0, startCaretPosition);
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
       var startEndIndex = (start + mention.value).length + 1;
 
-      mentionsCollection.push(mention);
+      mentionsCollection.push(mention);//Add the mention to mentionsColletions
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
       currentDataQuery = '';
       hideAutoComplete();
 
-      // Mentions & syntax message
+      // Mentions and syntax message
       var updatedMessageText = start + mention.value + ' ' + end;
-      elmInputBox.val(updatedMessageText);
+      elmInputBox.val(updatedMessageText); //Set the value to the txt area
       updateValues();
 
       // Set correct focus and selection
@@ -179,27 +196,32 @@
       utils.setCaratPosition(elmInputBox[0], startEndIndex);
     }
 
+	//Gets the actual value of the text area without white spaces from the beginning and end of the value
     function getInputBoxValue() {
       return $.trim(elmInputBox.val());
     }
 
+	//Takes the click event when the user select a item of the dropdown
     function onAutoCompleteItemClick(e) {
-      var elmTarget = $(this);
-      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')];
+      var elmTarget = $(this); //Get the item selected
+      var mention = autocompleteItemCollection[elmTarget.attr('data-uid')]; //Obtains the mention
 
       addMention(mention);
 
       return false;
     }
 
+	//Takes the click event on text area
     function onInputBoxClick(e) {
       resetBuffer();
     }
 
+	//Takes the blur event on text area
     function onInputBoxBlur(e) {
       hideAutoComplete();
     }
 
+	//Takes the input event when users write or delete something
     function onInputBoxInput(e) {
       updateValues();
       updateMentionsCollection();
@@ -295,7 +317,7 @@
       elmAutocompleteList.show();
 
       // Filter items that has already been mentioned
-      var mentionValues = _.pluck(mentionsCollection, 'value');
+	  var mentionValues = _.pluck(mentionsCollection, 'value');
       results = _.reject(results, function (item) {
         return _.include(mentionValues, item.name);
       });
