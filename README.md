@@ -9,13 +9,14 @@ To get started -- checkout http://podio.github.com/jquery-mentions-input
 
 ## Latest release
 
-1.5.0 (2012-7-7) -- https://github.com/podio/jquery-mentions-input/tree/1.5
+1.5.0 (2012-7-7) -- https://github.com/podio/jquery-mentions-input/releases/tag/1.5.0
 
 ## Bugs and Enhancements (next version)
 
 - [] Fix #74 Mention on ordinary input field not textarea
 - [] Fix #26 Capital letter as trigger character
-- [] Fix #59 Unicode characters supports
+- [] Fix #59 Unicode characters support
+- [] Fix #104 When same text which is to be mentioned already in the content
 
 ## License
 
