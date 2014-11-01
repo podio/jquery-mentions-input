@@ -226,60 +226,64 @@
       updateValues();
       updateMentionsCollection();
 
-      var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar);
-      if (triggerCharIndex > -1) {
-        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join('');
-        currentDataQuery = utils.rtrim(currentDataQuery);
+      var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar); //Returns the last match of the triggerChar in the inputBuffer
+      if (triggerCharIndex > -1) { //If the triggerChar is present in the inputBuffer array
+        currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join(''); //Gets the currentDataQuery
+        currentDataQuery = utils.rtrim(currentDataQuery); //Deletes the whitespaces
 
-        _.defer(_.bind(doSearch, this, currentDataQuery));
+        _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
       }
     }
 
+	//Takes the keypress event
     function onInputBoxKeyPress(e) {
-      if(e.keyCode !== KEY.BACKSPACE) {
-        var typedValue = String.fromCharCode(e.which || e.keyCode);
-        inputBuffer.push(typedValue);
+      if(e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
+        var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
+        inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
       }
     }
 
+	//Takes the keydown event
     function onInputBoxKeyDown(e) {
 
       // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
       if (e.keyCode === KEY.LEFT || e.keyCode === KEY.RIGHT || e.keyCode === KEY.HOME || e.keyCode === KEY.END) {
-        // Defer execution to ensure carat pos has changed after HOME/END keys
+        // Defer execution to ensure carat pos has changed after HOME/END keys then call the resetBuffer function
         _.defer(resetBuffer);
 
         // IE9 doesn't fire the oninput event when backspace or delete is pressed. This causes the highlighting
         // to stay on the screen whenever backspace is pressed after a highlighed word. This is simply a hack
         // to force updateValues() to fire when backspace/delete is pressed in IE9.
         if (navigator.userAgent.indexOf("MSIE 9") > -1) {
-          _.defer(updateValues);
+          _.defer(updateValues); //Call the updateValues function
         }
 
         return;
       }
 
+	  //If the key pressed was the backspace
       if (e.keyCode === KEY.BACKSPACE) {
         inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
         return;
       }
 
+	  //If the elmAutocompleteList is hidden
       if (!elmAutocompleteList.is(':visible')) {
         return true;
       }
 
       switch (e.keyCode) {
-        case KEY.UP:
+        case KEY.UP: //If the key pressed was UP or DOWN
         case KEY.DOWN:
           var elmCurrentAutoCompleteItem = null;
-          if (e.keyCode === KEY.DOWN) {
-            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-              elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next();
+          if (e.keyCode === KEY.DOWN) { //If the key pressed was DOWN
+            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If elmActiveAutoCompleteItem exits 
+              elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next(); //Gets the next li element in the list
             } else {
-              elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first();
+              elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first(); //Gets the first li element found
             }
           } else {
-            elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev();
+            elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev(); //The key pressed was UP and gets the previous li element
           }
 
           if (elmCurrentAutoCompleteItem.length) {
@@ -288,10 +292,10 @@
 
           return false;
 
-        case KEY.RETURN:
+        case KEY.RETURN: //If the key pressed was RETURN or TAB
         case KEY.TAB:
-          if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) {
-            elmActiveAutoCompleteItem.trigger('mousedown');
+          if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+            elmActiveAutoCompleteItem.trigger('mousedown'); //Calls the mousedown event
             return false;
           }
 
@@ -301,20 +305,23 @@
       return true;
     }
 
+	//Hides the autoomplete
     function hideAutoComplete() {
       elmActiveAutoCompleteItem = null;
       elmAutocompleteList.empty().hide();
     }
 
+	//Selects the item in the autocomplete list
     function selectAutoCompleteItem(elmItem) {
-      elmItem.addClass(settings.classes.autoCompleteItemActive);
-      elmItem.siblings().removeClass(settings.classes.autoCompleteItemActive);
+      elmItem.addClass(settings.classes.autoCompleteItemActive); //Add the class active to item
+      elmItem.siblings().removeClass(settings.classes.autoCompleteItemActive); //Gets all li elements in autocomplete list and remove the class active
 
-      elmActiveAutoCompleteItem = elmItem;
+      elmActiveAutoCompleteItem = elmItem; //Sets the item to elmActiveAutoCompleteItem
     }
 
+	//Populates dropdown
     function populateDropdown(query, results) {
-      elmAutocompleteList.show();
+      elmAutocompleteList.show(); //Shows the autocomplete list
 
       // Filter items that has already been mentioned
 	  var mentionValues = _.pluck(mentionsCollection, 'value');
@@ -322,57 +329,64 @@
         return _.include(mentionValues, item.name);
       });
 
-      if (!results.length) {
+      if (!results.length) { //If there are not elements hide the autocomplete list
         hideAutoComplete();
         return;
       }
 
-      elmAutocompleteList.empty();
-      var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide();
+      elmAutocompleteList.empty(); //Remove all li elements in autocomplete list
+      var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide(); //Inserts a ul element to autocomplete div and hide it
 
       _.each(results, function (item, index) {
-        var itemUid = _.uniqueId('mention_');
+        var itemUid = _.uniqueId('mention_'); //Gets the item with unique id
 
-        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name});
+        autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name}); //Inserts the new item to autocompleteItemCollection
 
         var elmListItem = $(settings.templates.autocompleteListItem({
           'id'      : utils.htmlEncode(item.id),
           'display' : utils.htmlEncode(item.name),
           'type'    : utils.htmlEncode(item.type),
           'content' : utils.highlightTerm(utils.htmlEncode((item.name)), query)
-        })).attr('data-uid', itemUid);
+        })).attr('data-uid', itemUid); //Inserts the new item to list
 
+		//If the index is 0
         if (index === 0) {
           selectAutoCompleteItem(elmListItem);
         }
 
+		//If show avatars is true
         if (settings.showAvatars) {
           var elmIcon;
 
+		  //If the item has an avatar
           if (item.avatar) {
             elmIcon = $(settings.templates.autocompleteListItemAvatar({ avatar : item.avatar }));
-          } else {
+          } else { //If not then we set an default icon
             elmIcon = $(settings.templates.autocompleteListItemIcon({ icon : item.icon }));
           }
-          elmIcon.prependTo(elmListItem);
+          elmIcon.prependTo(elmListItem); //Inserts the elmIcon to elmListItem
         }
-        elmListItem = elmListItem.appendTo(elmDropDownList);
+        elmListItem = elmListItem.appendTo(elmDropDownList); //Insets the elmListItem to elmDropDownList
       });
 
-      elmAutocompleteList.show();
-      elmDropDownList.show();
+      elmAutocompleteList.show(); //Shows the elmAutocompleteList div
+      elmDropDownList.show(); //Shows the elmDropDownList
     }
 
+	//Search into data list passed as parameter
     function doSearch(query) {
+	  //If the query is not null, undefined, empty and has the minimum chars
       if (query && query.length && query.length >= settings.minChars) {
+		//Call the onDataRequest function and then call the populateDropDrown
         settings.onDataRequest.call(this, 'search', query, function (responseData) {
           populateDropdown(query, responseData);
         });
-      } else {
-        hideAutoComplete();
+      } else { //If the query is null, undefined, empty or has not the minimun chars
+        hideAutoComplete(); //Hide the autocompletelist
       }
     }
 
+	//Resets the text area
     function resetInput() {
       elmInputBox.val('');
       mentionsCollection = [];
@@ -381,7 +395,8 @@
 
     // Public methods
     return {
-      init : function (domTarget) {
+      //Initializes the mentionsInput component on a specific element.
+	  init : function (domTarget) {
 
         domInput = domTarget;
 
@@ -390,12 +405,14 @@
         initMentionsOverlay();
         resetInput();
 
+		//If the autocomplete list has prefill mentions
         if( settings.prefillMention ) {
           addMention( settings.prefillMention );
         }
 
       },
 
+	  //An async method which accepts a callback function and returns a value of the input field (including markup) as a first parameter of this function. This is the value you want to send to your server.
       val : function (callback) {
         if (!_.isFunction(callback)) {
           return;
@@ -405,10 +422,12 @@
         callback.call(this, value);
       },
 
+	  //Resets the text area value and clears all mentions
       reset : function () {
         resetInput();
       },
 
+	  //An async method which accepts a callback function and returns a collection of mentions as hash objects as a first parameter.
       getMentions : function (callback) {
         if (!_.isFunction(callback)) {
           return;
@@ -419,10 +438,12 @@
     };
   };
 
+  //Main function to include into jQuery and initialize the plugin
   $.fn.mentionsInput = function (method, settings) {
 
-    var outerArguments = arguments;
+    var outerArguments = arguments; //Gets the arguments
 
+	//If method is not a function
     if (typeof method === 'object' || !method) {
       settings = method;
     }
