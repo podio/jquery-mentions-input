@@ -418,8 +418,7 @@
           return;
         }
 
-        var value = mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue();
-        callback.call(this, value);
+        callback.call(this, mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue());
       },
 
 	  //Resets the text area value and clears all mentions
