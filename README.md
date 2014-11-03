@@ -17,6 +17,7 @@ To get started -- checkout http://podio.github.com/jquery-mentions-input
 - [ ] Fix #26 Capital letter as trigger character
 - [ ] Fix #59 Unicode characters support
 - [ ] Fix #104 When same text which is to be mentioned already in the content
+- [ ] Fix #100 New option for conserve triggerChar in output
 
 ## License
 
