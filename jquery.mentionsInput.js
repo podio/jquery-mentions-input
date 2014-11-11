@@ -201,12 +201,27 @@
       return $.trim(elmInputBox.val());
     }
 
+  //Scrolls back to the input after autocomplete if the window has scrolled past the input
+    function scrollToInput() {
+      var elmDistanceFromTop = $(elmInputBox).offset().top; //input offset
+      var bodyDistanceFromTop = $('body').offset().top; //body offset
+      var distanceScrolled = $(window).scrollTop(); //distance scrolled
+
+      if (distanceScrolled > elmDistanceFromTop) {
+        //subtracts body distance to handle fixed headers
+        $(window).scrollTop(elmDistanceFromTop - bodyDistanceFromTop);
+      }
+
+    }
+
 	//Takes the click event when the user select a item of the dropdown
     function onAutoCompleteItemClick(e) {
       var elmTarget = $(this); //Get the item selected
       var mention = autocompleteItemCollection[elmTarget.attr('data-uid')]; //Obtains the mention
 
       addMention(mention);
+
+      scrollToInput();
 
       return false;
     }
