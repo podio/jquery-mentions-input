@@ -76,7 +76,7 @@
     var mentionsCollection = [];
     var autocompleteItemCollection = {};
     var inputBuffer = [];
-    var currentDataQuery;
+    var currentDataQuery = '';
 
 	//Mix the default setting with the users settings
     settings = $.extend(true, {}, defaultSettings, settings );
