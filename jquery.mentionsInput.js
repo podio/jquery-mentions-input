@@ -18,6 +18,7 @@
     triggerChar   : '@', //Char that respond to event
     onDataRequest : $.noop, //Function where we can search the data
     minChars      : 2, //Minimum chars to fire the event
+    allowRepeat   : false, //Allow repeat mentions
     showAvatars   : true, //Show the avatars
     elastic       : true, //Grow the textarea automatically
     classes       : { 
@@ -338,11 +339,13 @@
     function populateDropdown(query, results) {
       elmAutocompleteList.show(); //Shows the autocomplete list
 
-      // Filter items that has already been mentioned
-	  var mentionValues = _.pluck(mentionsCollection, 'value');
-      results = _.reject(results, function (item) {
-        return _.include(mentionValues, item.name);
-      });
+      if(!settings.allowRepeat) {
+        // Filter items that has already been mentioned
+        var mentionValues = _.pluck(mentionsCollection, 'value');
+        results = _.reject(results, function (item) {
+          return _.include(mentionValues, item.name);
+        });
+      }
 
       if (!results.length) { //If there are not elements hide the autocomplete list
         hideAutoComplete();
