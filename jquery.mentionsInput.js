@@ -18,6 +18,7 @@
     triggerChar   : '@', //Char that respond to event
     onDataRequest : $.noop, //Function where we can search the data
     minChars      : 2, //Minimum chars to fire the event
+    allowRepeat   : false, //Allow repeat mentions
     showAvatars   : true, //Show the avatars
     elastic       : true, //Grow the textarea automatically
     classes       : { 
@@ -40,6 +41,10 @@
 	//Encodes the character with _.escape function (undersocre)
     htmlEncode       : function (str) {
       return _.escape(str);
+    },
+    //Encodes the character to be used with RegExp
+    regexpEncode     : function (str) {
+      return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     },
 	//
     highlightTerm    : function (value, term) {
@@ -127,7 +132,7 @@
 
       _.each(mentionsCollection, function (mention) {
         var textSyntax = settings.templates.mentionItemSyntax(mention);
-        syntaxMessage = syntaxMessage.replace(mention.value, textSyntax);
+        syntaxMessage = syntaxMessage.replace(new RegExp(utils.regexpEncode(mention.value), 'g'), textSyntax);
       });
 
       var mentionText = utils.htmlEncode(syntaxMessage); //Encode the syntaxMessage
@@ -137,7 +142,7 @@
         var textSyntax = settings.templates.mentionItemSyntax(formattedMention);
         var textHighlight = settings.templates.mentionItemHighlight(formattedMention);
 
-        mentionText = mentionText.replace(textSyntax, textHighlight);
+        mentionText = mentionText.replace(new RegExp(utils.regexpEncode(textSyntax), 'g'), textHighlight);
       });
 
       mentionText = mentionText.replace(/\n/g, '<br />'); //Replace the escape character for <br />
@@ -179,7 +184,10 @@
       var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
       var startEndIndex = (start + mention.value).length + 1;
 
-      mentionsCollection.push(mention);//Add the mention to mentionsColletions
+      // See if there's the same mention in the list
+      if( !_.find(mentionsCollection, function (object) { return object.id == mention.id; }) ) {
+        mentionsCollection.push(mention);//Add the mention to mentionsColletions
+      }
 
       // Cleaning before inserting the value, otherwise auto-complete would be triggered with "old" inputbuffer
       resetBuffer();
@@ -338,11 +346,13 @@
     function populateDropdown(query, results) {
       elmAutocompleteList.show(); //Shows the autocomplete list
 
-      // Filter items that has already been mentioned
-	  var mentionValues = _.pluck(mentionsCollection, 'value');
-      results = _.reject(results, function (item) {
-        return _.include(mentionValues, item.name);
-      });
+      if(!settings.allowRepeat) {
+        // Filter items that has already been mentioned
+        var mentionValues = _.pluck(mentionsCollection, 'value');
+        results = _.reject(results, function (item) {
+          return _.include(mentionValues, item.name);
+        });
+      }
 
       if (!results.length) { //If there are not elements hide the autocomplete list
         hideAutoComplete();
