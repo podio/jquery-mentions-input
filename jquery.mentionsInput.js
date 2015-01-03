@@ -77,11 +77,17 @@
   //Main class of MentionsInput plugin
   var MentionsInput = function (settings) {
 
-    var domInput, elmInputBox, elmInputWrapper, elmAutocompleteList, elmWrapperBox, elmMentionsOverlay, elmActiveAutoCompleteItem;
-    var mentionsCollection = [];
-    var autocompleteItemCollection = {};
-    var inputBuffer = [];
-    var currentDataQuery = '';
+    var domInput, 
+		elmInputBox, 
+		elmInputWrapper, 
+		elmAutocompleteList, 
+		elmWrapperBox, 
+		elmMentionsOverlay, 
+		elmActiveAutoCompleteItem,
+		mentionsCollection = [],
+		autocompleteItemCollection = {},
+		inputBuffer = [],
+		currentDataQuery = '';
 
 	//Mix the default setting with the users settings
     settings = $.extend(true, {}, defaultSettings, settings );
