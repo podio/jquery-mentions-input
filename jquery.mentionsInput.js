@@ -160,6 +160,7 @@
       mentionText = mentionText.replace(/ {2}/g, '&nbsp; '); //Replace the 2 preceding token to &nbsp; 
 
       elmInputBox.data('messageText', syntaxMessage); //Save the messageText to elmInputBox
+	  elmInputBox.trigger('updated');
       elmMentionsOverlay.find('div').html(mentionText); //Insert into a div of the elmMentionsOverlay the mention text
     }
 
@@ -208,6 +209,7 @@
       // Mentions and syntax message
       var updatedMessageText = start + mention.value + ' ' + end;
       elmInputBox.val(updatedMessageText); //Set the value to the txt area
+	  elmInputBox.trigger('mention');
       updateValues();
 
       // Set correct focus and selection
