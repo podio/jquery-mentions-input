@@ -18,7 +18,7 @@ $(function () {
 
       callback.call(this, data);
     },
-	allowRepeat: true
+	onCaret: true
   });
 
   $('.get-syntax-text').click(function() {
