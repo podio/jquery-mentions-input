@@ -457,6 +457,14 @@
       elmAutocompleteList.css('width', '15em'); // Sort of a guess
       elmAutocompleteList.css('left', position.left);
       elmAutocompleteList.css('top', lineHeight + position.top);
+      //check if the right position of auto complete is larger than the right position of the input
+      //if yes, reset the lest of auto complete to make it right-align with caret
+      elmInputBoxRight = elmInputBox.offset().left + elmInputBox.width();
+      elmAutocompleteListRight =elmAutocompleteList.offset().left + elmAutocompleteList.width();
+      if (elmInputBoxRight < elmAutocompleteListRight) {
+        elmAutocompleteList.css('left', Math.abs(elmAutocompleteList.position().left - elmAutocompleteList.width()));
+      }
+
     }
 
 	//Resets the text area
