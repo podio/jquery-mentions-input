@@ -245,6 +245,25 @@
             return c = document.createElement("div"), $(c).css(g), $(i).after(c), b = document.createTextNode(i.value.substring(0, i.selectionEnd)), a = document.createTextNode(i.value.substring(i.selectionEnd)), d = document.createElement("span"), d.innerHTML = "&nbsp;", c.appendChild(b), c.appendChild(d), c.appendChild(a), c.scrollTop = i.scrollTop, f = $(d).position(), $(c).remove(), f
         }
 
+        //same as above function but return offset instead of position
+        function textareaSelectionOffset($el) {
+            var a, b, c, d, e, f, g, h, i, j, k;
+            if (!(i = $el[0])) return;
+            if (!$(i).is("textarea")) return;
+            if (i.selectionEnd == null) return;
+            g = {
+                position: "absolute",
+                overflow: "auto",
+                whiteSpace: "pre-wrap",
+                wordWrap: "break-word",
+                boxSizing: "content-box",
+                top: 0,
+                left: -9999
+            }, h = ["boxSizing", "fontFamily", "fontSize", "fontStyle", "fontVariant", "fontWeight", "height", "letterSpacing", "lineHeight", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "textDecoration", "textIndent", "textTransform", "width", "word-spacing"];
+            for (j = 0, k = h.length; j < k; j++) e = h[j], g[e] = $(i).css(e);
+            return c = document.createElement("div"), $(c).css(g), $(i).after(c), b = document.createTextNode(i.value.substring(0, i.selectionEnd)), a = document.createTextNode(i.value.substring(i.selectionEnd)), d = document.createElement("span"), d.innerHTML = "&nbsp;", c.appendChild(b), c.appendChild(d), c.appendChild(a), c.scrollTop = i.scrollTop, f = $(d).offset(), $(c).remove(), f
+        }
+
         //Scrolls back to the input after autocomplete if the window has scrolled past the input
         function scrollToInput() {
             var elmDistanceFromTop = $(elmInputBox).offset().top; //input offset
@@ -443,18 +462,28 @@
         }
 	
 	    function positionAutocomplete(elmAutocompleteList, elmInputBox) {
-            var position = textareaSelectionPosition(elmInputBox),
-            lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
-            elmAutocompleteList.css('width', '15em'); // Sort of a guess
-            elmAutocompleteList.css('left', position.left);
-            elmAutocompleteList.css('top', lineHeight + position.top);
+            var elmAutocompleteListPosition = elmAutocompleteList.css('position');
+            if (elmAutocompleteListPosition == 'absolute') {
+                var position = textareaSelectionPosition(elmInputBox),
+                    lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
+                elmAutocompleteList.css('width', '15em'); // Sort of a guess
+                elmAutocompleteList.css('left', position.left);
+                elmAutocompleteList.css('top', lineHeight + position.top);
 
-            //check if the right position of auto complete is larger than the right position of the input
-            //if yes, reset the left of auto complete list to make it fit the input
-            var elmInputBoxRight = elmInputBox.offset().left + elmInputBox.width(),
-                elmAutocompleteListRight = elmAutocompleteList.offset().left + elmAutocompleteList.width();
-            if (elmInputBoxRight <= elmAutocompleteListRight) {
-                elmAutocompleteList.css('left', Math.abs(elmAutocompleteList.position().left - (elmAutocompleteListRight - elmInputBoxRight)));
+                //check if the right position of auto complete is larger than the right position of the input
+                //if yes, reset the left of auto complete list to make it fit the input
+                var elmInputBoxRight = elmInputBox.offset().left + elmInputBox.width(),
+                    elmAutocompleteListRight = elmAutocompleteList.offset().left + elmAutocompleteList.width();
+                if (elmInputBoxRight <= elmAutocompleteListRight) {
+                    elmAutocompleteList.css('left', Math.abs(elmAutocompleteList.position().left - (elmAutocompleteListRight - elmInputBoxRight)));
+                }
+            }
+            else if (elmAutocompleteListPosition == 'fixed') {
+                var offset = textareaSelectionOffset(elmInputBox),
+                    lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
+                elmAutocompleteList.css('width', '15em'); // Sort of a guess
+                elmAutocompleteList.css('left', offset.left + 10000);
+                elmAutocompleteList.css('top', lineHeight + offset.top);
             }
         }
 
