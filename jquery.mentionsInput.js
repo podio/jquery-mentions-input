@@ -12,7 +12,7 @@
 
     // Settings
     var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
-  
+
     //Default settings
     var defaultSettings = {
         triggerChar   : '@', //Char that respond to event
@@ -21,7 +21,8 @@
         allowRepeat   : false, //Allow repeat mentions
         showAvatars   : true, //Show the avatars
         elastic       : true, //Grow the textarea automatically
-	    onCaret       : false,
+        defaultValue  : '',
+	      onCaret       : false,
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -221,7 +222,7 @@
         function getInputBoxValue() {
             return $.trim(elmInputBox.val());
         }
-	
+
         // This is taken straight from live (as of Sep 2012) GitHub code. The
         // technique is known around the web. Just google it. Github's is quite
         // succint though. NOTE: relies on selectionEnd, which as far as IE is concerned,
@@ -441,7 +442,7 @@
                 hideAutoComplete(); //Hide the autocompletelist
             }
         }
-	
+
 	    function positionAutocomplete(elmAutocompleteList, elmInputBox) {
             var position = textareaSelectionPosition(elmInputBox),
             lineHeight = parseInt(elmInputBox.css('line-height'), 10) || 18;
@@ -458,13 +459,19 @@
             }
         }
 
-	    //Resets the text area
-        function resetInput() {
-            elmInputBox.val('');
+        //Resets the text area
+        function resetInput(currentVal) {
             mentionsCollection = [];
+            var mentionText = utils.htmlEncode(currentVal);
+            var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
+            var match, newMentionText = mentionText;
+            while ((match = regex.exec(mentionText)) != null) {
+                newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
+                mentionsCollection.push({ 'id': match[4], 'type': match[3], 'value': match[2], 'trigger': match[1] });
+            }
+            elmInputBox.val(newMentionText);
             updateValues();
         }
-
         // Public methods
         return {
             //Initializes the mentionsInput component on a specific element.
@@ -475,7 +482,7 @@
                 initTextarea();
                 initAutocomplete();
                 initMentionsOverlay();
-                resetInput();
+                resetInput(settings.defaultValue);
 
                 //If the autocomplete list has prefill mentions
                 if( settings.prefillMention ) {
