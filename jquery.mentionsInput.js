@@ -22,7 +22,7 @@
         showAvatars   : true, //Show the avatars
         elastic       : true, //Grow the textarea automatically
         defaultValue  : '',
-	      onCaret       : false,
+        onCaret       : false,
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
