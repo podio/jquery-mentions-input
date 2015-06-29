@@ -184,14 +184,25 @@
 	    //Adds mention to mentions collections
         function addMention(mention) {
 
-            var currentMessage = getInputBoxValue(); //Get the actual value of the text area
+            var currentMessage = getInputBoxValue(),
+                caretStart = elmInputBox[0].selectionStart,
+                shortestDistance = false,
+                bestLastIndex = false;
 
             // Using a regex to figure out positions
-            var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi");
-            regex.exec(currentMessage); //Executes a search for a match in a specified string. Returns a result array, or null
+            var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi"),
+                regexMatch;
 
-            var startCaretPosition = regex.lastIndex - currentDataQuery.length - 1; //Set the star caret position
-            var currentCaretPosition = regex.lastIndex; //Set the current caret position
+            while(regexMatch = regex.exec(currentMessage)) {
+                if (shortestDistance === false || Math.abs(regex.lastIndex - caretStart) < shortestDistance) {
+                    shortestDistance = Math.abs(regex.lastIndex - caretStart);
+                    bestLastIndex = regex.lastIndex;
+                }
+            }
+
+            var startCaretPosition = bestLastIndex - currentDataQuery.length - 1; //Set the start caret position (right before the @)
+            var currentCaretPosition = bestLastIndex; //Set the current caret position (right after the end of the "mention")
+
 
             var start = currentMessage.substr(0, startCaretPosition);
             var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
