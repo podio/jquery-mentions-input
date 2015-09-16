@@ -531,8 +531,11 @@
             },
 
 	        //An async method which accepts a callback function and returns a value of the input field (including markup) as a first parameter of this function. This is the value you want to send to your server.
-            val : function () {
-              return mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue();
+            val : function (callback) {
+                if (!_.isFunction(callback)) {
+                    return;
+                }
+                callback.call(this, mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue());
             },
 
 	        //Resets the text area value and clears all mentions
@@ -541,9 +544,26 @@
             },
 
 	        //An async method which accepts a callback function and returns a collection of mentions as hash objects as a first parameter.
-            getMentions : function () {
-              return mentionsCollection;
+            getMentions : function (callback) {
+                if (!_.isFunction(callback)) {
+                    return;
+                }
+                callback.call(this, mentionsCollection);
+            },
+
+            getMentionsAndVal: function(callback) {
+                if (!_.isFunction(callback)) {
+                    return;
+                }
+
+                var output = {
+                  mentions: mentionsCollection,
+                  val: mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue()
+                };
+
+                callback.call(this, output);
             }
+
         };
     };
 
