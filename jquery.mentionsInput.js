@@ -525,9 +525,14 @@
                 resetInput(settings.defaultValue);
 
                 //If the autocomplete list has prefill mentions
-                if( settings.prefillMention ) {
-                    addMention( settings.prefillMention );
+                if (settings.prefillMentions) {
+                    _.each(settings.prefillMentions, function(mention) {
+                       currentDataQuery = mention.value;
+                       addMention(mention);
+                    });
                 }
+
+                currentDataQuery = '';
             },
 
 	        //An async method which accepts a callback function and returns a value of the input field (including markup) as a first parameter of this function. This is the value you want to send to your server.
