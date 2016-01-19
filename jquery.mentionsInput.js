@@ -538,9 +538,14 @@
                 callback.call(this, mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue());
             },
 
-	        //Resets the text area value and clears all mentions
+        	//Resets the text area value and clears all mentions
             reset : function () {
                 resetInput();
+            },
+
+            //Reinit with the text area value if it was changed programmatically
+            reinit : function () {
+                resetInput(false);
             },
 
 	        //An async method which accepts a callback function and returns a collection of mentions as hash objects as a first parameter.
