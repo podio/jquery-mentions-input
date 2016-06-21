@@ -9,7 +9,7 @@ To get started -- checkout http://podio.github.com/jquery-mentions-input
 
 ## Latest release
 
-1.6.0 (2015-Jan-7) -- https://github.com/podio/jquery-mentions-input/releases/tag/1.6.0
+1.6.0 (2015-Jan-7) -- https://github.com/podio/jquery-mentions-input/releases/tag/v1.6.0
 
 ## Bugs and Enhancements (next version)
 
