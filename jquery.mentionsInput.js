@@ -378,6 +378,7 @@
                 case KEY.RETURN: //If the key pressed was RETURN or TAB
                 case KEY.TAB:
                     if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+                        e.stopImmediatePropagation();
                         elmActiveAutoCompleteItem.trigger('mousedown'); //Calls the mousedown event
                         return false;
                     }
