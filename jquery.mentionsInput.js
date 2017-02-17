@@ -222,7 +222,10 @@
             // Mentions and syntax message
             var updatedMessageText = start + mention.value + ' ' + end;
             elmInputBox.val(updatedMessageText); //Set the value to the txt area
-	        elmInputBox.trigger('mention');
+	        elmInputBox.trigger({
+                type: 'mention',
+                mention: mention
+            });
             updateValues();
 
             // Set correct focus and selection
