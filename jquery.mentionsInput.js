@@ -23,6 +23,7 @@
         elastic       : true, //Grow the textarea automatically
         defaultValue  : '',
         onCaret       : false,
+        rejectFilter  : null,
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -221,7 +222,10 @@
             // Mentions and syntax message
             var updatedMessageText = start + mention.value + ' ' + end;
             elmInputBox.val(updatedMessageText); //Set the value to the txt area
-	        elmInputBox.trigger('mention');
+	        elmInputBox.trigger({
+                type: 'mention',
+                mention: mention
+            });
             updateValues();
 
             // Set correct focus and selection
@@ -408,7 +412,9 @@
             if(!settings.allowRepeat) {
                 // Filter items that has already been mentioned
                 var mentionValues = _.pluck(mentionsCollection, 'value');
-                results = _.reject(results, function (item) {
+                results = _.reject(results, settings.rejectFilter === 'function' ? function(item) { 
+                    return settings.reject(item, mentionsCollection); 
+                } : function (item) {
                     return _.include(mentionValues, item.name);
                 });
             }
