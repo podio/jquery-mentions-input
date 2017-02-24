@@ -101,6 +101,10 @@ code {
     margin-left: 20px;
 }
 
+code.inline {
+    margin-left: 0;
+}
+
 pre {
     font-size: 12px;
     padding: 2px 0 2px 12px;
