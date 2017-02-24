@@ -209,6 +209,10 @@
             var end = currentMessage.substr(currentCaretPosition, currentMessage.length);
             var startEndIndex = (start + mention.value).length + 1;
 
+            if (settings.conserveTriggerChar) {
+                mention.value = settings.triggerChar + mention.value;
+            }
+
             // See if there's the same mention in the list
             if( !_.find(mentionsCollection, function (object) { return object.id == mention.id; }) ) {
                 mentionsCollection.push(mention);//Add the mention to mentionsColletions
@@ -220,7 +224,7 @@
             hideAutoComplete();
 
             // Mentions and syntax message
-            var updatedMessageText = start + (settings.conserveTriggerChar ? settings.triggerChar : '') + mention.value + ' ' + end;
+            var updatedMessageText = start + mention.value + ' ' + end;
             elmInputBox.val(updatedMessageText); //Set the value to the txt area
 	        elmInputBox.trigger('mention');
             updateValues();
