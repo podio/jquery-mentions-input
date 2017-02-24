@@ -15,14 +15,15 @@
 
     //Default settings
     var defaultSettings = {
-        triggerChar   : '@', //Char that respond to event
-        onDataRequest : $.noop, //Function where we can search the data
-        minChars      : 2, //Minimum chars to fire the event
-        allowRepeat   : false, //Allow repeat mentions
-        showAvatars   : true, //Show the avatars
-        elastic       : true, //Grow the textarea automatically
-        defaultValue  : '',
-        onCaret       : false,
+        triggerChar         : '@', //Char that respond to event
+        onDataRequest       : $.noop, //Function where we can search the data
+        minChars            : 2, //Minimum chars to fire the event
+        allowRepeat         : false, //Allow repeat mentions
+        showAvatars         : true, //Show the avatars
+        elastic             : true, //Grow the textarea automatically
+        defaultValue        : '',
+        onCaret             : false,
+        conserveTriggerChar : false,
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -219,7 +220,7 @@
             hideAutoComplete();
 
             // Mentions and syntax message
-            var updatedMessageText = start + mention.value + ' ' + end;
+            var updatedMessageText = start + (settings.conserveTriggerChar ? settings.triggerChar : '') + mention.value + ' ' + end;
             elmInputBox.val(updatedMessageText); //Set the value to the txt area
 	        elmInputBox.trigger('mention');
             updateValues();
