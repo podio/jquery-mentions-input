@@ -550,7 +550,7 @@
 
             addMentions: function(){
                 for(var i=0; i<mentions.length; i++){
-                    console.log("Mentions in 3rd party plugin is",mentions[i]);
+                    console.log("Mention in 3rd party plugin is",mentions[i]);
                     addMention(mentions[i]);
                 }
             },
