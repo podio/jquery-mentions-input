@@ -548,6 +548,13 @@
                 resetInput();
             },
 
+            addMentions: function(){
+                for(var i=0; i<mentions.length; i++){
+                    console.log("Mentions in 3rd party plugin is",mentions[i]);
+                    addMention(mentions[i]);
+                }
+            },
+
 	        //An async method which accepts a callback function and returns a collection of mentions as hash objects as a first parameter.
             getMentions : function (callback) {
                 if (!_.isFunction(callback)) {
