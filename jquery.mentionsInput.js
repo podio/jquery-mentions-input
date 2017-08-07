@@ -1,17 +1,27 @@
-/*
- * Mentions Input
- * Version 1.0.2
- * Written by: Kenneth Auchenberg (Podio)
+/**
+ * jquery.mentionsInput
+ * Version 1.0.3
  *
  * Using underscore.js
  *
- * License: MIT License - http://www.opensource.org/licenses/mit-license.php
+ * jquery.mentionsInput is a small, but awesome UI component that allows you to "@mention" someone in a text message, just like you are used to on Facebook or Twitter.
+ * This project is written by Kenneth Auchenberg, and started as an internal project at Podio, but has then been open sourced to give it a life in the community.
+ * This 'fork' of the original 'Mentions Input' is based on v1.0.2 (available from http://podio.github.io/jquery-mentions-input/)
+ *
+ * @author Kenneth Auchenberg (Podio)
+ * @author Rich Jeffery (Worktribe)
+ * @license MIT License - http://www.opensource.org/licenses/mit-license.php
+ * @link https://github.com/richjeffery/jquery-mentions-input
+ * @version 1.0.3
+ *
  */
 
 (function ($, _, undefined) {
 
     // Settings
     var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
+
+    var searchcount = 0;
 
     //Default settings
     var defaultSettings = {
@@ -129,7 +139,7 @@
         function initAutocomplete() {
             elmAutocompleteList = $(settings.templates.autocompleteList()); //Get the HTML code for the list
             elmAutocompleteList.appendTo(elmWrapperBox); //Append to elmWrapperBox element
-            elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick); //Delegate the event
+            elmAutocompleteList.on('mousedown', 'li', onAutoCompleteItemClick );
         }
 
         //Initializes the mentions' overlay
@@ -310,6 +320,16 @@
 
         //Takes the input event when users write or delete something
         function onInputBoxInput(e) {
+
+            var ua = navigator.userAgent.toLowerCase();
+            var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+            if (isAndroid) {//certain versions of android mobile browser don't trigger the keypress event.
+                if (e.keyCode !== KEY.BACKSPACE) {
+                    var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
+                    inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+                }
+            }
+
             updateValues();
             updateMentionsCollection();
 
@@ -319,13 +339,18 @@
                 currentDataQuery = utils.rtrim(currentDataQuery); //Deletes the whitespaces
                 _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
             }
+
         }
 
         //Takes the keypress event
         function onInputBoxKeyPress(e) {
-            if(e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
-                var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
-                inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+            var ua = navigator.userAgent.toLowerCase();
+            var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+            if(!isAndroid) {
+                if (e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
+                    var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
+                    inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+                }
             }
         }
 
@@ -377,7 +402,10 @@
                     return false;
                 case KEY.RETURN: //If the key pressed was RETURN or TAB
                 case KEY.TAB:
-                    if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+                case KEY.SPACE:
+                    // If the user presses space and there's only one result, then select the name, otherwise in the cases of Return and Tab behave normally
+                    if (((e.keyCode == KEY.SPACE && searchcount == 1) || e.keyCode !== KEY.SPACE) && elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+                        e.stopImmediatePropagation();
                         elmActiveAutoCompleteItem.trigger('mousedown'); //Calls the mousedown event
                         return false;
                     }
@@ -467,9 +495,11 @@
                 //Call the onDataRequest function and then call the populateDropDrown
                 settings.onDataRequest.call(this, 'search', query, function (responseData) {
                     populateDropdown(query, responseData);
+                    searchcount = responseData.length;
                 });
             } else { //If the query is null, undefined, empty or has not the minimun chars
                 hideAutoComplete(); //Hide the autocompletelist
+                searchcount = 0;
             }
         }
 
