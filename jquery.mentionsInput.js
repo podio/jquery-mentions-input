@@ -1,6 +1,6 @@
 /**
  * jquery.mentionsInput
- * Version 1.0.3
+ * Version 1.0.4
  *
  * Using underscore.js
  *
@@ -12,7 +12,7 @@
  * @author Rich Jeffery (Worktribe)
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
  * @link https://github.com/richjeffery/jquery-mentions-input
- * @version 1.0.3
+ * @version 1.0.4
  *
  */
 
@@ -28,6 +28,7 @@
         triggerChar   : '@', //Char that respond to event
         onDataRequest : $.noop, //Function where we can search the data
         minChars      : 2, //Minimum chars to fire the event
+        maxResults    : 10, // Maximum number of results to display in list (0 to show all)
         allowRepeat   : false, //Allow repeat mentions
         showAvatars   : true, //Show the avatars
         elastic       : true, //Grow the textarea automatically
@@ -449,7 +450,20 @@
             elmAutocompleteList.empty(); //Remove all li elements in autocomplete list
             var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide(); //Inserts a ul element to autocomplete div and hide it
 
+            // If the maxResults setting is more than 0, then limit the results
+            if (parseInt(settings.maxResults) > 0)
+                var limitResults = true;
+            // Otherwise, only show as many
+            else
+                var limitResults = false;
+
+            var resultCount = 0;
+
             _.each(results, function (item, index) {
+
+                // If we are limiting results, and we've reached the maxResults, then stop here
+                if (limitResults && resultCount >= parseInt(settings.maxResults)) return false;
+
                 var itemUid = _.uniqueId('mention_'); //Gets the item with unique id
 
                 autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name}); //Inserts the new item to autocompleteItemCollection
@@ -479,6 +493,10 @@
                     elmIcon.prependTo(elmListItem); //Inserts the elmIcon to elmListItem
                 }
                 elmListItem = elmListItem.appendTo(elmDropDownList); //Insets the elmListItem to elmDropDownList
+
+                // Add 1 to the resultCount
+                resultCount++;
+
             });
 
             elmAutocompleteList.show(); //Shows the elmAutocompleteList div
@@ -571,6 +589,11 @@
         	//Resets the text area value and clears all mentions
             reset : function () {
                 resetInput();
+            },
+
+            // Hides Autocomplete box
+            hideAutoComplete : function () {
+	            hideAutoComplete();
             },
 
             //Reinit with the text area value if it was changed programmatically
