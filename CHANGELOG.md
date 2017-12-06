@@ -1,5 +1,9 @@
 ## Change Log
 
+### 1.0.4
+* You can now limit the number of results returned to make it more performant if you have lots of people you can mention
+* You can now close the autocomplete window as part of your own code.
+
 ### 1.0.3
 * Adjusts code to remove deprecated jQuery calls
 * Adds functionality that autocompletes inputs if there's only one result and you press space
