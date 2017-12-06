@@ -11,7 +11,7 @@ To get started -- checkout http://richjeffery.github.com/jquery-mentions-input
 
 ## Latest release
 
-1.0.3 (2017-Apr-8) -- https://github.com/richjeffery/jquery-mentions-input/releases/tag/1.0.3
+1.0.4 (2017-Oct-6) -- https://github.com/richjeffery/jquery-mentions-input/releases/tag/1.0.4
 
 ## License
 
