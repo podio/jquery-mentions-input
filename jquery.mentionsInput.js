@@ -1,6 +1,6 @@
 /**
  * jquery.mentionsInput
- * Version 1.0.4
+ * Version 1.1
  *
  * Using underscore.js
  *
@@ -12,7 +12,7 @@
  * @author Rich Jeffery (Worktribe)
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
  * @link https://github.com/richjeffery/jquery-mentions-input
- * @version 1.0.4
+ * @version 1.1
  *
  */
 
@@ -23,17 +23,20 @@
 
     var searchcount = 0;
 
+    var lastTriggerChar = '';       // Last trigger char used
+
     //Default settings
     var defaultSettings = {
-        triggerChar   : '@', //Char that respond to event
-        onDataRequest : $.noop, //Function where we can search the data
-        minChars      : 2, //Minimum chars to fire the event
-        maxResults    : 10, // Maximum number of results to display in list (0 to show all)
-        allowRepeat   : false, //Allow repeat mentions
-        showAvatars   : true, //Show the avatars
-        elastic       : true, //Grow the textarea automatically
-        defaultValue  : '',
-        onCaret       : false,
+        triggerChars   : ['@'],                         // Array of chars that respond to event
+        onDataRequest : $.noop,                         // Function where we can search the data
+        minChars      : 2,                              // Minimum chars to fire the event (0 will display the pop-up on the trigger character)
+        maxResults    : 10,                             // Maximum number of results to display in list (0 to show all)
+        allowRepeat   : false,                          // Allow repeat mentions
+        showAvatars   : true,                           // Show the avatars
+        elastic       : true,                           // Grow the textarea automatically
+        prefixes      : ['(', '[', '<', '{', ' '],      // List of characters that can come before the trigger character, if not at the start of the textbox
+        defaultValue  : '',                             // Default value for input box
+        onCaret       : false,                          // Whether to render the autocomplete list where the caret is
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -63,7 +66,7 @@
             if (!term && !term.length) {
                 return value;
             }
-            return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+            return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + this.regexpEncode(term) + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
         },
         //Sets the caret in a valid position
         setCaratPosition : function (domNode, caretPos) {
@@ -201,7 +204,7 @@
                 bestLastIndex = false;
 
             // Using a regex to figure out positions
-            var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi"),
+            var regex = new RegExp("(\\" + settings.triggerChars.join('|\\') + ")" + currentDataQuery.trim(), "gi"),
                 regexMatch;
 
             while(regexMatch = regex.exec(currentMessage)) {
@@ -312,6 +315,7 @@
         //Takes the click event on text area
         function onInputBoxClick(e) {
             resetBuffer();
+            hideAutoComplete();
         }
 
         //Takes the blur event on text area
@@ -334,11 +338,46 @@
             updateValues();
             updateMentionsCollection();
 
-            var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar); //Returns the last match of the triggerChar in the inputBuffer
+            var triggerCharIndex = -1;
+            var prevCharIndex = -1;
+            settings.triggerChars.forEach(function (triggerChar) {
+
+                // If we already have search results and a previous character location, set the trigger character index to 0 (as the trigger character will be at the start of the string
+                if (searchcount > 0 && prevCharIndex > -1) {
+                    triggerCharIndex = 0;
+                    return true;
+                }
+
+                // If we already have a trigger character, there's already search results, and the first character after the trigger character isn't a space, stop looking for more triggers
+                if (triggerCharIndex > -1 && searchcount > 0 && inputBuffer[triggerCharIndex + 1] !== " ") return true;
+                var inputBufferProcessing = inputBuffer.slice(0);
+
+                // Whilst there are still letters to process in the input buffer...
+                while (inputBufferProcessing.length > 0) {
+                    triggerCharIndex = Math.max(prevCharIndex, _.lastIndexOf(inputBufferProcessing, triggerChar)); //Returns the last match of the triggerChar in the inputBuffer
+
+                    // If the character index doesn't match the previous one, and we're either at the first character or in the approved list of starting characters (minus the trigger characters)x§
+                    if (triggerCharIndex !== prevCharIndex && (triggerCharIndex == 0 || _.difference(settings.prefixes, settings.triggerChars).includes(inputBufferProcessing[triggerCharIndex - 1]))) {
+
+                        prevCharIndex = triggerCharIndex;
+                        lastTriggerChar = triggerChar;
+                        break;
+                    } else {
+                        triggerCharIndex = prevCharIndex;
+                        inputBufferProcessing.pop();
+                    }
+                }
+
+            });
+
             if (triggerCharIndex > -1) { //If the triggerChar is present in the inputBuffer array
-                currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join(''); //Gets the currentDataQuery
-                currentDataQuery = utils.rtrim(currentDataQuery); //Deletes the whitespaces
-                _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
+                inputBuffer = inputBuffer.slice(triggerCharIndex);
+                currentDataQuery = inputBuffer.slice(1).join(''); //Gets the currentDataQuery
+                if (currentDataQuery.charAt(0) !== ' ') {
+                    _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
+                } else {
+                    hideAutoComplete();
+                }
             }
 
         }
@@ -369,6 +408,9 @@
                 if (navigator.userAgent.indexOf("MSIE 9") > -1) {
                   _.defer(updateValues); //Call the updateValues function
                 }
+
+                // hide the autocomplete
+                hideAutoComplete();
 
                 return;
             }
@@ -469,10 +511,10 @@
                 autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name}); //Inserts the new item to autocompleteItemCollection
 
                 var elmListItem = $(settings.templates.autocompleteListItem({
-                    'id'      : utils.htmlEncode(item.id),
-                    'display' : utils.htmlEncode(item.name),
-                    'type'    : utils.htmlEncode(item.type),
-                    'content' : utils.highlightTerm(utils.htmlEncode((item.display ? item.display : item.name)), query)
+                    'id'            : utils.htmlEncode(item.id),
+                    'display'       : utils.htmlEncode(item.name),
+                    'type'          : utils.htmlEncode(item.type),
+                    'content'       : utils.highlightTerm(utils.htmlEncode((item.display ? item.display : item.name)), query),
                 })).attr('data-uid', itemUid); //Inserts the new item to list
 
                 //If the index is 0
@@ -508,14 +550,14 @@
 
         //Search into data list passed as parameter
         function doSearch(query) {
-            //If the query is not null, undefined, empty and has the minimum chars
-            if (query && query.length && query.length >= settings.minChars) {
+            // If the minChars is 0, or the (query is not null, undefined, empty and has the minimum chars)
+            if (settings.minChars === 0 || (query && query.length && query.length >= settings.minChars)) {
                 //Call the onDataRequest function and then call the populateDropDrown
-                settings.onDataRequest.call(this, 'search', query, function (responseData) {
+                settings.onDataRequest.call(this, lastTriggerChar, query, function (responseData) {
                     populateDropdown(query, responseData);
                     searchcount = responseData.length;
                 });
-            } else { //If the query is null, undefined, empty or has not the minimun chars
+            } else { //If the query is null, undefined, empty or has not the minimum chars
                 hideAutoComplete(); //Hide the autocompletelist
                 searchcount = 0;
             }
@@ -551,13 +593,14 @@
         function resetInput(currentVal) {
             mentionsCollection = [];
             var mentionText = utils.htmlEncode(currentVal);
-            var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
+            var regex = new RegExp("(" + settings.triggerChars.join("|") + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
             var match, newMentionText = mentionText;
             while ((match = regex.exec(mentionText)) != null) {
                 newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
                 mentionsCollection.push({ 'id': match[4], 'type': match[3], 'value': match[2], 'trigger': match[1] });
             }
             elmInputBox.val(newMentionText);
+            lastTriggerChar = "";
             updateValues();
         }
         // Public methods

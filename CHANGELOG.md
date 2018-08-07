@@ -1,5 +1,18 @@
 ## Change Log
 
+### 1.1
+
+##### Added
+
+* You can now provide an array of trigger characters to handle multiple datasets (e.g.: '**@**' for people, '**#**' for records, '**$**' for products, etc.)  
+    - New setting - **triggerChars** _(array)_:
+        - an array of trigger characters the mentions will respond to, which you can associate to either the same dataset or multiple different datasets using ***onDataRequest***. (default ['@'])
+* By setting ***minChars*** to 0, **mentionsInput** will now display the list of mentionable items instantly, limited to the maximum number of results set in **maxResults**. 
+
+##### Removed
+
+* *(string)* **triggerChar**: This has been replaced with *(array)* **triggerChars**. 
+
 ### 1.0.4
 * You can now limit the number of results returned to make it more performant if you have lots of people you can mention
 * You can now close the autocomplete window as part of your own code.
@@ -21,3 +34,4 @@ Fixed issue with space on search queries. ( https://github.com/podio/jquery-ment
 
 ### 1.0.0
 * Initial release
+    
