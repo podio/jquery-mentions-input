@@ -1,11 +1,19 @@
-/*
- * Mentions Input
- * Version 1.0.2
- * Written by: Kenneth Auchenberg (Podio)
+/**
+ * jquery.mentionsInput
+ * Version 1.1
  *
  * Using underscore.js
  *
- * License: MIT License - http://www.opensource.org/licenses/mit-license.php
+ * jquery.mentionsInput is a small, but awesome UI component that allows you to "@mention" someone in a text message, just like you are used to on Facebook or Twitter.
+ * This project is written by Kenneth Auchenberg, and started as an internal project at Podio, but has then been open sourced to give it a life in the community.
+ * This 'fork' of the original 'Mentions Input' is based on v1.0.2 (available from http://podio.github.io/jquery-mentions-input/)
+ *
+ * @author Kenneth Auchenberg (Podio)
+ * @author Rich Jeffery (Worktribe)
+ * @license MIT License - http://www.opensource.org/licenses/mit-license.php
+ * @link https://github.com/richjeffery/jquery-mentions-input
+ * @version 1.1
+ *
  */
 
 (function ($, _, undefined) {
@@ -13,16 +21,22 @@
     // Settings
     var KEY = { BACKSPACE : 8, TAB : 9, RETURN : 13, ESC : 27, LEFT : 37, UP : 38, RIGHT : 39, DOWN : 40, COMMA : 188, SPACE : 32, HOME : 36, END : 35 }; // Keys "enum"
 
+    var searchcount = 0;
+
+    var lastTriggerChar = '';       // Last trigger char used
+
     //Default settings
     var defaultSettings = {
-        triggerChar   : '@', //Char that respond to event
-        onDataRequest : $.noop, //Function where we can search the data
-        minChars      : 2, //Minimum chars to fire the event
-        allowRepeat   : false, //Allow repeat mentions
-        showAvatars   : true, //Show the avatars
-        elastic       : true, //Grow the textarea automatically
-        defaultValue  : '',
-        onCaret       : false,
+        triggerChars   : ['@'],                         // Array of chars that respond to event
+        onDataRequest : $.noop,                         // Function where we can search the data
+        minChars      : 2,                              // Minimum chars to fire the event (0 will display the pop-up on the trigger character)
+        maxResults    : 10,                             // Maximum number of results to display in list (0 to show all)
+        allowRepeat   : false,                          // Allow repeat mentions
+        showAvatars   : true,                           // Show the avatars
+        elastic       : true,                           // Grow the textarea automatically
+        prefixes      : ['(', '[', '<', '{', ' '],      // List of characters that can come before the trigger character, if not at the start of the textbox
+        defaultValue  : '',                             // Default value for input box
+        onCaret       : false,                          // Whether to render the autocomplete list where the caret is
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -52,7 +66,7 @@
             if (!term && !term.length) {
                 return value;
             }
-            return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
+            return value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + this.regexpEncode(term) + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
         },
         //Sets the caret in a valid position
         setCaratPosition : function (domNode, caretPos) {
@@ -129,7 +143,7 @@
         function initAutocomplete() {
             elmAutocompleteList = $(settings.templates.autocompleteList()); //Get the HTML code for the list
             elmAutocompleteList.appendTo(elmWrapperBox); //Append to elmWrapperBox element
-            elmAutocompleteList.delegate('li', 'mousedown', onAutoCompleteItemClick); //Delegate the event
+            elmAutocompleteList.on('mousedown', 'li', onAutoCompleteItemClick );
         }
 
         //Initializes the mentions' overlay
@@ -190,7 +204,7 @@
                 bestLastIndex = false;
 
             // Using a regex to figure out positions
-            var regex = new RegExp("\\" + settings.triggerChar + currentDataQuery, "gi"),
+            var regex = new RegExp("(\\" + settings.triggerChars.join('|\\') + ")" + currentDataQuery.trim(), "gi"),
                 regexMatch;
 
             while(regexMatch = regex.exec(currentMessage)) {
@@ -301,6 +315,7 @@
         //Takes the click event on text area
         function onInputBoxClick(e) {
             resetBuffer();
+            hideAutoComplete();
         }
 
         //Takes the blur event on text area
@@ -310,22 +325,72 @@
 
         //Takes the input event when users write or delete something
         function onInputBoxInput(e) {
+
+            var ua = navigator.userAgent.toLowerCase();
+            var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+            if (isAndroid) {//certain versions of android mobile browser don't trigger the keypress event.
+                if (e.keyCode !== KEY.BACKSPACE) {
+                    var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
+                    inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+                }
+            }
+
             updateValues();
             updateMentionsCollection();
 
-            var triggerCharIndex = _.lastIndexOf(inputBuffer, settings.triggerChar); //Returns the last match of the triggerChar in the inputBuffer
+            var triggerCharIndex = -1;
+            var prevCharIndex = -1;
+            settings.triggerChars.forEach(function (triggerChar) {
+
+                // If we already have search results and a previous character location, set the trigger character index to 0 (as the trigger character will be at the start of the string
+                if (searchcount > 0 && prevCharIndex > -1) {
+                    triggerCharIndex = 0;
+                    return true;
+                }
+
+                // If we already have a trigger character, there's already search results, and the first character after the trigger character isn't a space, stop looking for more triggers
+                if (triggerCharIndex > -1 && searchcount > 0 && inputBuffer[triggerCharIndex + 1] !== " ") return true;
+                var inputBufferProcessing = inputBuffer.slice(0);
+
+                // Whilst there are still letters to process in the input buffer...
+                while (inputBufferProcessing.length > 0) {
+                    triggerCharIndex = Math.max(prevCharIndex, _.lastIndexOf(inputBufferProcessing, triggerChar)); //Returns the last match of the triggerChar in the inputBuffer
+
+                    // If the character index doesn't match the previous one, and we're either at the first character or in the approved list of starting characters (minus the trigger characters)x§
+                    if (triggerCharIndex !== prevCharIndex && (triggerCharIndex == 0 || _.difference(settings.prefixes, settings.triggerChars).includes(inputBufferProcessing[triggerCharIndex - 1]))) {
+
+                        prevCharIndex = triggerCharIndex;
+                        lastTriggerChar = triggerChar;
+                        break;
+                    } else {
+                        triggerCharIndex = prevCharIndex;
+                        inputBufferProcessing.pop();
+                    }
+                }
+
+            });
+
             if (triggerCharIndex > -1) { //If the triggerChar is present in the inputBuffer array
-                currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join(''); //Gets the currentDataQuery
-                currentDataQuery = utils.rtrim(currentDataQuery); //Deletes the whitespaces
-                _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
+                inputBuffer = inputBuffer.slice(triggerCharIndex);
+                currentDataQuery = inputBuffer.slice(1).join(''); //Gets the currentDataQuery
+                if (currentDataQuery.charAt(0) !== ' ') {
+                    _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
+                } else {
+                    hideAutoComplete();
+                }
             }
+
         }
 
         //Takes the keypress event
         function onInputBoxKeyPress(e) {
-            if(e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
-                var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
-                inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+            var ua = navigator.userAgent.toLowerCase();
+            var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+            if(!isAndroid) {
+                if (e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
+                    var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
+                    inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
+                }
             }
         }
 
@@ -343,6 +408,9 @@
                 if (navigator.userAgent.indexOf("MSIE 9") > -1) {
                   _.defer(updateValues); //Call the updateValues function
                 }
+
+                // hide the autocomplete
+                hideAutoComplete();
 
                 return;
             }
@@ -377,7 +445,10 @@
                     return false;
                 case KEY.RETURN: //If the key pressed was RETURN or TAB
                 case KEY.TAB:
-                    if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+                case KEY.SPACE:
+                    // If the user presses space and there's only one result, then select the name, otherwise in the cases of Return and Tab behave normally
+                    if (((e.keyCode == KEY.SPACE && searchcount == 1) || e.keyCode !== KEY.SPACE) && elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
+                        e.stopImmediatePropagation();
                         elmActiveAutoCompleteItem.trigger('mousedown'); //Calls the mousedown event
                         return false;
                     }
@@ -421,16 +492,29 @@
             elmAutocompleteList.empty(); //Remove all li elements in autocomplete list
             var elmDropDownList = $("<ul>").appendTo(elmAutocompleteList).hide(); //Inserts a ul element to autocomplete div and hide it
 
+            // If the maxResults setting is more than 0, then limit the results
+            if (parseInt(settings.maxResults) > 0)
+                var limitResults = true;
+            // Otherwise, only show as many
+            else
+                var limitResults = false;
+
+            var resultCount = 0;
+
             _.each(results, function (item, index) {
+
+                // If we are limiting results, and we've reached the maxResults, then stop here
+                if (limitResults && resultCount >= parseInt(settings.maxResults)) return false;
+
                 var itemUid = _.uniqueId('mention_'); //Gets the item with unique id
 
                 autocompleteItemCollection[itemUid] = _.extend({}, item, {value: item.name}); //Inserts the new item to autocompleteItemCollection
 
                 var elmListItem = $(settings.templates.autocompleteListItem({
-                    'id'      : utils.htmlEncode(item.id),
-                    'display' : utils.htmlEncode(item.name),
-                    'type'    : utils.htmlEncode(item.type),
-                    'content' : utils.highlightTerm(utils.htmlEncode((item.display ? item.display : item.name)), query)
+                    'id'            : utils.htmlEncode(item.id),
+                    'display'       : utils.htmlEncode(item.name),
+                    'type'          : utils.htmlEncode(item.type),
+                    'content'       : utils.highlightTerm(utils.htmlEncode((item.display ? item.display : item.name)), query),
                 })).attr('data-uid', itemUid); //Inserts the new item to list
 
                 //If the index is 0
@@ -451,6 +535,10 @@
                     elmIcon.prependTo(elmListItem); //Inserts the elmIcon to elmListItem
                 }
                 elmListItem = elmListItem.appendTo(elmDropDownList); //Insets the elmListItem to elmDropDownList
+
+                // Add 1 to the resultCount
+                resultCount++;
+
             });
 
             elmAutocompleteList.show(); //Shows the elmAutocompleteList div
@@ -462,14 +550,16 @@
 
         //Search into data list passed as parameter
         function doSearch(query) {
-            //If the query is not null, undefined, empty and has the minimum chars
-            if (query && query.length && query.length >= settings.minChars) {
+            // If the minChars is 0, or the (query is not null, undefined, empty and has the minimum chars)
+            if (settings.minChars === 0 || (query && query.length && query.length >= settings.minChars)) {
                 //Call the onDataRequest function and then call the populateDropDrown
-                settings.onDataRequest.call(this, 'search', query, function (responseData) {
+                settings.onDataRequest.call(this, lastTriggerChar, query, function (responseData) {
                     populateDropdown(query, responseData);
+                    searchcount = responseData.length;
                 });
-            } else { //If the query is null, undefined, empty or has not the minimun chars
+            } else { //If the query is null, undefined, empty or has not the minimum chars
                 hideAutoComplete(); //Hide the autocompletelist
+                searchcount = 0;
             }
         }
 
@@ -503,13 +593,14 @@
         function resetInput(currentVal) {
             mentionsCollection = [];
             var mentionText = utils.htmlEncode(currentVal);
-            var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
+            var regex = new RegExp("(" + settings.triggerChars.join("|") + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
             var match, newMentionText = mentionText;
             while ((match = regex.exec(mentionText)) != null) {
                 newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
                 mentionsCollection.push({ 'id': match[4], 'type': match[3], 'value': match[2], 'trigger': match[1] });
             }
             elmInputBox.val(newMentionText);
+            lastTriggerChar = "";
             updateValues();
         }
         // Public methods
@@ -541,6 +632,11 @@
         	//Resets the text area value and clears all mentions
             reset : function () {
                 resetInput();
+            },
+
+            // Hides Autocomplete box
+            hideAutoComplete : function () {
+	            hideAutoComplete();
             },
 
             //Reinit with the text area value if it was changed programmatically

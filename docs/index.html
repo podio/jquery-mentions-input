@@ -23,14 +23,16 @@
 
 <p>This project is written by <a href="http://twitter.com/auchenberg">Kenneth Auchenberg</a>, and started as an internal project at <a href="http://podio.com">Podio</a>, but has then been open sourced to give it a life in the community. </p>
 
-<p><a href="https://twitter.com/share" class="twitter-share-button" data-url="http://podio.github.com/jquery-mentions-input/" data-via="auchenberg" data-lang="en">Tweet</a></p>
+  <p>This fork of the original mentionsInput (based on 1.0.2) is developed by <a href="http://github.com/richjeffery">Rich Jeffery</a> at <a href="http://worktribe.com">Worktribe</a>, and has some added adjustments and improvements. See the Change Log for full details.</p>
+
+<p><a href="https://twitter.com/share" class="twitter-share-button" data-url="https://richjeffery.github.io/jquery-mentions-input/" data-via="mooseblaster" data-lang="en">Tweet</a></p>
 
 <h2>Examples</h2>
 
 <p>Basic example (<a href="assets/examples.js">source</a>)</p>
 
 <div class="examples">
-  <textarea class='mention' placeholder='Try to mention me, by typing @ken'></textarea>
+  <textarea class='mention' placeholder='Try to mention me, by typing @rich'></textarea>
   <a class="button get-syntax-text">Get marked-up value</a>
   <a class="button get-mentions">Get mentions collection</a>
 </div>
@@ -38,7 +40,7 @@
 <p>AJAX example. (Getting data by AJAX, and filter in callback - <a href="assets/example2.js">source</a>)</p>
 
 <div class="examples">
-  <textarea class='mention-example2' placeholder='Try to mention me, by typing @ken'></textarea>
+  <textarea class='mention-example2' placeholder='Try to mention me, by typing @rich'></textarea>
 </div>
 
 <h2>Download and source</h2>
@@ -67,6 +69,7 @@ $('textarea.mention').mentionsInput({
       { id:4, name:'Kasper Hulthin', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' },
       { id:5, name:'Andreas Haugstrup', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' },
       { id:6, name:'Pete Lacey', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' }
+      { id:7, name:'Rich Jeffery', 'avatar':'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif', 'type':'contact' }
     ];
 
     data = _.filter(data, function(item) { return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1 });
@@ -175,8 +178,8 @@ $('textarea.mention').mentionsInput({
 <p>When the component is preforming a "query" on the data specified through the onDataRequest-callback, it's expecting a specific data structure to be returned. </p>
 <pre>
 {
-  'id'    : 1,
-  'name'  : 'Kenneth Auchenberg',
+  'id'    : 7,
+  'name'  : 'Rich Jeffery',
   'avatar': 'http://cdn0.4dots.com/i/customavatars/avatar7112_1.gif',
   'icon'  : 'icon-16 icon-person',
   'type'  : 'contact'
@@ -195,7 +198,7 @@ $('textarea.mention').mentionsInput({
 </pre>
 <p>Like:</p>
 <pre>
-  This is a message for @[Kenneth Auchenberg](contact:1)
+  This is a message for @[Rich Jeffery](contact:7)
 </pre>
 
 
@@ -219,7 +222,22 @@ $('textarea.mention').mentionsInput({
 
 <h2>Change Log</h2>
 
-<p>
+  <p>
+  <b class="header">1.0.1</b><br/>
+  <ul>
+    <li>Removed elastic-option since it wasn't really working without it. <a href="https://github.com/podio/jquery-mentions-input/issues/1"> https://github.com/podio/jquery-mentions-input/issues/1</a>)</li>
+    <li>Fixed issue with space on search queries. (<a href="https://github.com/podio/jquery-mentions-input/issues/24"> https://github.com/podio/jquery-mentions-input/issues/24</a>)</li>
+  </ul>
+
+  <p>
+  <b class="header">1.0.1</b><br/>
+  <ul>
+    <li>Removed elastic-option since it wasn't really working without it. <a href="https://github.com/podio/jquery-mentions-input/issues/1"> https://github.com/podio/jquery-mentions-input/issues/1</a>)</li>
+    <li>Fixed issue with space on search queries. (<a href="https://github.com/podio/jquery-mentions-input/issues/24"> https://github.com/podio/jquery-mentions-input/issues/24</a>)</li>
+  </ul>
+</p>
+
+  <p>
   <b class="header">1.0.1</b><br/>
   <ul>
     <li>Removed elastic-option since it wasn't really working without it. <a href="https://github.com/podio/jquery-mentions-input/issues/1"> https://github.com/podio/jquery-mentions-input/issues/1</a>)</li>
