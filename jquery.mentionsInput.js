@@ -15,14 +15,15 @@
 
     //Default settings
     var defaultSettings = {
-        triggerChar   : '@', //Char that respond to event
-        onDataRequest : $.noop, //Function where we can search the data
-        minChars      : 2, //Minimum chars to fire the event
-        allowRepeat   : false, //Allow repeat mentions
-        showAvatars   : true, //Show the avatars
-        elastic       : true, //Grow the textarea automatically
-        defaultValue  : '',
-        onCaret       : false,
+        triggerChar           : '@', //Char that respond to event
+        onDataRequest         : $.noop, //Function where we can search the data
+        minChars              : 2, //Minimum chars to fire the event
+        allowRepeat           : false, //Allow repeat mentions
+        showAvatars           : true, //Show the avatars
+        elastic               : true, //Grow the textarea automatically
+        defaultValue          : '',
+        onCaret               : false,
+        hideTriggerCharOnLoad : false,
         classes       : {
             autoCompleteItemActive : "active" //Classes to apply in each item
         },
@@ -506,7 +507,11 @@
             var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
             var match, newMentionText = mentionText;
             while ((match = regex.exec(mentionText)) != null) {
-                newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
+                if(settings.hideTriggerCharOnLoad) {
+                    newMentionText = newMentionText.replace(match[0], match[2]);
+                } else {
+                    newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
+                }
                 mentionsCollection.push({ 'id': match[4], 'type': match[3], 'value': match[2], 'trigger': match[1] });
             }
             elmInputBox.val(newMentionText);
