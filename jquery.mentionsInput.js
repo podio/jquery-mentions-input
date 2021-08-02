@@ -88,7 +88,10 @@
             mentionsCollection = [],
             autocompleteItemCollection = {},
             inputBuffer = [],
-            currentDataQuery = '';
+            currentDataQuery = '',
+            isAndroid = (typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().indexOf('android') > -1),
+            preInputLength,
+            postInputLength;
 
 	    //Mix the default setting with the users settings
         settings = $.extend(true, {}, defaultSettings, settings );
@@ -108,8 +111,49 @@
             elmWrapperBox = elmInputWrapper.find('> div.mentions-input-box'); //Obtains the div elmWrapperBox that now contains the text area
 
             elmInputBox.attr('data-mentions-input', 'true'); //Sets the attribute data-mentions-input to true -> Defines if the text area is already configured
+            
+            /**
+             * Bug Fix - Android soft keyboard neports undefined, 0 of 229 (buffer busy)
+             * for e.keyCode and e.which on seemingly all input keys. This 'hack'
+             * makes best guesses to correct this and set e.keyCode and e.which 
+             * to more appropriate values before actual @mentions logic steps
+             * in to deal with the latest user input action(s)
+             */
+            if(isAndroid) {
+                elmInputBox.bind('input', function(e) { 
+                    /**
+                     * Record input length post-update and see if fewer characters
+                     * present, which must indicate a deletion has been made
+                     */
+                    postInputLength = this.value.length;
+                    if (preInputLength > postInputLength) {
+                        // Must have been a delete key press
+                        e.keyCode = KEY.BACKSPACE;
+                        e.which = KEY.BACKSPACE;
+                    } else {
+                        // Make a best guess at key pressed based on last character in textarea
+                        // Note: means there is no support for typing updates mid-content
+                        var char = this.value.charCodeAt(this.value.length - 1);
+                        if(e.keyCode === undefined || e.keyCode === 0 || e.keyCode === 229) { 
+                            e.keyCode = char; 
+                        }
+                        if(e.which === undefined || e.which === 0 || e.which === 229) { 
+                            e.which = char;
+                        }
+                    }
+                    return true; 
+                });
+            } 
+
             elmInputBox.bind('keydown', onInputBoxKeyDown); //Bind the keydown event to the text area
-            elmInputBox.bind('keypress', onInputBoxKeyPress); //Bind the keypress event to the text area
+
+            // On Android, bind typing so mentions behave as expected
+            if (isAndroid) {
+                elmInputBox.bind('input', onInputBoxKeyPress); //Bind the input event to the text area (as Android doesn't support the, now deprecated, keypress event)
+            } else {
+                elmInputBox.bind('keypress', onInputBoxKeyPress); //Bind the keypress event to the text area
+            }
+
             elmInputBox.bind('click', onInputBoxClick); //Bind the click event to the text area
             elmInputBox.bind('blur', onInputBoxBlur); //Bind the blur event to the text area
 
@@ -323,14 +367,26 @@
 
         //Takes the keypress event
         function onInputBoxKeyPress(e) {
-            if(e.keyCode !== KEY.BACKSPACE) { //If the key pressed is not the backspace
+
+            //If the key pressed was the backspace
+            if (e.keyCode === KEY.BACKSPACE) {
+                inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
+                return;
+            } else { //If the key pressed is not the backspace
                 var typedValue = String.fromCharCode(e.which || e.keyCode); //Takes the string that represent this CharCode
                 inputBuffer.push(typedValue); //Push the value pressed into inputBuffer
             }
+
         }
 
 	    //Takes the keydown event
         function onInputBoxKeyDown(e) {
+
+            /*
+             * Store length of input pre-updates to compare against post-update
+             * and identify del/backspace push on soft keyboard on Android
+             */
+            preInputLength = this.value.length;
 
             // This also matches HOME/END on OSX which is CMD+LEFT, CMD+RIGHT
             if (e.keyCode === KEY.LEFT || e.keyCode === KEY.RIGHT || e.keyCode === KEY.HOME || e.keyCode === KEY.END) {
@@ -344,12 +400,6 @@
                   _.defer(updateValues); //Call the updateValues function
                 }
 
-                return;
-            }
-
-            //If the key pressed was the backspace
-            if (e.keyCode === KEY.BACKSPACE) {
-                inputBuffer = inputBuffer.slice(0, -1 + inputBuffer.length); // Can't use splice, not available in IE
                 return;
             }
 
