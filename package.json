@@ -1,0 +1,28 @@
+{
+  "name": "harvs1789uk-jquery-mentions",
+  "version": "1.0.0",
+  "description": "A fork of podio/jquery-mentions-input which provides best efforts at supporting Android soft keyboard usage ",
+  "main": "jquery.mentionsInput.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HARVS1789UK/jquery-mentions-input.git"
+  },
+  "keywords": [
+    "jQuery",
+    "Android",
+    "tagging"
+  ],
+  "author": "joe.harvey@nexustech.je",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HARVS1789UK/jquery-mentions-input/issues"
+  },
+  "homepage": "https://github.com/HARVS1789UK/jquery-mentions-input#readme"
+}
